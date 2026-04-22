@@ -1,112 +1,287 @@
-const Roadmap = require('../models/Roadmap');
-const { generateRoadmapWithGemini } = require('../utils/geminiHelper');
+const axios = require("axios");
+const Roadmap = require("../models/Roadmap");
+const { getAllResources } = require("../utils/resourceService");
 
-// @route   POST /api/roadmap/generate
-// @desc    Generate a career roadmap using Gemini AI
-// @access  Private (requires authentication)
+
+// ================== GENERATE ROADMAP ==================
 exports.generateRoadmap = async (req, res) => {
   try {
     const { goal, skills, duration } = req.body;
 
-    // Validate input
-    if (!goal || !skills || !duration) {
+    if (!goal || !duration) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide goal, skills, and duration',
+        message: "Please provide goal and duration",
       });
     }
 
-    // Validate input length
-    if (goal.length < 5 || goal.length > 200) {
-      return res.status(400).json({
-        success: false,
-        message: 'Goal must be between 5 and 200 characters',
-      });
+    const userSkills =
+      skills && skills.trim() !== "" ? skills : "beginner";
+
+    const prompt = `
+You are a professional career mentor AI.
+
+Create a COMPLETE and DETAILED roadmap for becoming a ${goal}.
+
+User details:
+- Current Skills: ${userSkills}
+- Duration: ${duration}
+
+IMPORTANT:
+- Return strictly valid JSON
+- Do NOT break strings
+- Do NOT miss quotes
+- Ensure JSON is parseable
+
+STRICT RULES:
+- Divide into months
+- Each month → 4 weeks
+- Each week → 3-6 tasks
+- Return ONLY JSON
+
+{
+  "career": "${goal}",
+  "steps": [
+    {
+      "title": "Month 1",
+      "description": "Detailed...",
+      "skills": [],
+      "tools": [],
+      "resources": [],
+      "projectIdeas": [],
+      "weeks": [
+        {
+          "week": "Week 1",
+          "focus": "Topic",
+          "tasks": ["Task 1", "Task 2"]
+        }
+      ]
     }
+  ]
+}
+`;
 
-    if (skills.length < 5 || skills.length > 500) {
-      return res.status(400).json({
-        success: false,
-        message: 'Skills must be between 5 and 500 characters',
-      });
-    }
+    const response = await axios.post(
+      "https://api.groq.com/openai/v1/chat/completions",
+      {
+        model: "llama-3.3-70b-versatile",
+        messages: [{ role: "user", content: prompt }],
+        temperature: 0.7,
+      },
+      {
+        headers: {
+          Authorization: `Bearer ${process.env.GROQ_API_KEY}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
 
-    console.log(`
-    ════════════════════════════════════════════════
-    🤖 Generating roadmap with Gemini AI
-    ════════════════════════════════════════════════
-    Goal: ${goal}
-    Skills: ${skills}
-    Duration: ${duration}
-    ════════════════════════════════════════════════
-    `);
+    let data = response.data.choices[0].message.content;
 
-    // Call Gemini API
-    const aiResponse = await generateRoadmapWithGemini(goal, skills, duration);
+    // 🔥 CLEAN RESPONSE
+    const cleanJSON = (str) => {
+      return str
+        .replace(/```json|```/g, "")
+        .replace(/\n/g, " ")
+        .replace(/,\s*}/g, "}")
+        .replace(/,\s*]/g, "]");
+    };
 
-    if (!aiResponse.success) {
-      console.error('AI Response Error:', aiResponse);
+    let parsed;
+
+    try {
+      const fixed = cleanJSON(data);
+      parsed = JSON.parse(fixed);
+    } catch (err) {
+      console.error("❌ Broken AI JSON:", data);
+
       return res.status(500).json({
         success: false,
-        message: aiResponse.message,
-        debug: process.env.NODE_ENV === 'development' ? aiResponse : undefined,
+        message: "AI returned invalid JSON",
       });
     }
 
-    // Extract data
-    const { data } = aiResponse;
-
-    // Validate AI response structure
-    if (!data.steps || !Array.isArray(data.steps) || data.steps.length === 0) {
+    if (!parsed.steps || !Array.isArray(parsed.steps)) {
       return res.status(500).json({
         success: false,
-        message: 'Invalid roadmap structure from AI',
+        message: "Invalid roadmap structure",
       });
     }
 
-    // Save roadmap to database
+    // ✅ MONTH → ONLY YOUTUBE
+    const monthRes = await getAllResources(goal);
+
+    parsed.steps = await Promise.all(
+      parsed.steps.map(async (step) => {
+        return {
+          title: step.title || "Untitled Month",
+
+          description:
+            step.description && step.description.length > 10
+              ? step.description
+              : "This month focuses on building fundamentals.",
+
+          skills: Array.isArray(step.skills) ? step.skills : [],
+          tools: Array.isArray(step.tools) ? step.tools : [],
+
+          resources:
+            monthRes.youtube.length > 0
+              ? monthRes.youtube
+              : [{ title: "No videos found", url: "" }],
+
+          projectIdeas: Array.isArray(step.projectIdeas)
+            ? step.projectIdeas
+            : [],
+
+          weeks: await Promise.all(
+            (step.weeks || []).map(async (week, index) => ({
+              week: week.week || `Week ${index + 1}`,
+              focus: week.focus || "Core concept",
+
+              tasks: await Promise.all(
+                (week.tasks || []).map(async (task) => {
+                  const cleanTopic = task
+                    .replace(/learn|understand|study|practice/gi, "")
+                    .replace(/\(.*?\)/g, "")
+                    .split(",")[0]
+                    .trim()
+                    .slice(0, 50);
+
+                  const res = await getAllResources(cleanTopic);
+
+                  return {
+                    title: task,
+                    completed: false,
+                    resources: {
+                      youtube:
+                        res.youtube.length > 0
+                          ? res.youtube
+                          : [{ title: "No videos found", url: "" }],
+
+                      courses:
+                        res.courses.length > 0
+                          ? res.courses
+                          : [{ title: "No courses found", url: "" }],
+
+                      docs:
+                        res.docs.length > 0
+                          ? res.docs
+                          : [{ title: "No documentation found", url: "" }],
+                    },
+                  };
+                })
+              ),
+
+              completed: false,
+            }))
+          ),
+        };
+      })
+    );
+
     const roadmap = await Roadmap.create({
       userId: req.user.id,
       goal,
-      skills,
+      skills: userSkills,
       duration,
-      career: data.career || goal,
-      steps: data.steps,
-      rawAiResponse: JSON.stringify(aiResponse.raw),
+      career: parsed.career || goal,
+      steps: parsed.steps,
     });
 
-    console.log(`✅ Roadmap generated and saved: ${roadmap._id}`);
-
-    // Return response
     res.status(201).json({
       success: true,
-      message: aiResponse.isMock
-        ? 'Roadmap generated with mock fallback (Gemini error captured)'
-        : 'Roadmap generated successfully',
-      ai: aiResponse.ai || {
-        status: 'success',
-        message: null,
-      },
-      source: aiResponse.isMock ? 'mock' : 'gemini',
-      roadmap: {
-        id: roadmap._id,
-        career: roadmap.career,
-        duration: roadmap.duration,
-        steps: roadmap.steps,
-      },
+      roadmap,
     });
+
   } catch (error) {
-    console.error('Generate roadmap error:', error);
+    console.error("🔥 Server Error:", error.message);
+
     res.status(500).json({
       success: false,
-      message: error.message || 'Error generating roadmap',
+      message: error.message,
+    });
+  }
+};
+// ================== TOGGLE TASK ==================
+exports.toggleTask = async (req, res) => {
+  try {
+    const { id } = req.params;
+    let { monthIndex, weekIndex, taskIndex } = req.body;
+
+    const roadmap = await Roadmap.findById(id);
+
+    if (!roadmap) {
+      return res.status(404).json({
+        success: false,
+        message: "Roadmap not found",
+      });
+    }
+
+    if (roadmap.userId.toString() !== req.user.id) {
+      return res.status(403).json({
+        success: false,
+        message: "Not authorized",
+      });
+    }
+
+    let task;
+
+    if (
+      monthIndex === undefined &&
+      weekIndex === undefined &&
+      taskIndex !== undefined
+    ) {
+      monthIndex = 0;
+      weekIndex = 0;
+    }
+
+    task =
+      roadmap.steps?.[monthIndex]?.weeks?.[weekIndex]?.tasks?.[taskIndex];
+
+    if (!task) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid indexes",
+      });
+    }
+
+    task.completed = !task.completed;
+
+    const week = roadmap.steps[monthIndex].weeks[weekIndex];
+    week.completed = week.tasks.every((t) => t.completed);
+
+    let total = 0;
+    let done = 0;
+
+    roadmap.steps.forEach((month) => {
+      month.weeks.forEach((week) => {
+        week.tasks.forEach((task) => {
+          total++;
+          if (task.completed) done++;
+        });
+      });
+    });
+
+    roadmap.progress = total === 0 ? 0 : Math.round((done / total) * 100);
+    roadmap.isCompleted = roadmap.progress === 100;
+
+    await roadmap.save();
+
+    res.json({
+      success: true,
+      message: "Task updated",
+      progress: roadmap.progress,
+    });
+
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
     });
   }
 };
 
-// @route   GET /api/roadmap/:id
-// @desc    Get a specific roadmap
-// @access  Private
+// ================== GET SINGLE ROADMAP ==================
 exports.getRoadmap = async (req, res) => {
   try {
     const roadmap = await Roadmap.findById(req.params.id);
@@ -114,57 +289,51 @@ exports.getRoadmap = async (req, res) => {
     if (!roadmap) {
       return res.status(404).json({
         success: false,
-        message: 'Roadmap not found',
+        message: "Roadmap not found",
       });
     }
 
-    // Check ownership
     if (roadmap.userId.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to access this roadmap',
+        message: "Not authorized",
       });
     }
 
-    res.status(200).json({
+    res.json({
       success: true,
       roadmap,
     });
+
   } catch (error) {
-    console.error('Get roadmap error:', error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Error retrieving roadmap',
+      message: error.message,
     });
   }
 };
 
-// @route   GET /api/roadmap
-// @desc    Get all roadmaps for user
-// @access  Private
+
+// ================== GET ALL ROADMAPS ==================
 exports.getUserRoadmaps = async (req, res) => {
   try {
-    const roadmaps = await Roadmap.find({ userId: req.user.id }).sort({
-      createdAt: -1,
-    });
+    const roadmaps = await Roadmap.find({ userId: req.user.id });
 
-    res.status(200).json({
+    res.json({
       success: true,
-      count: roadmaps.length,
       roadmaps,
     });
+
   } catch (error) {
-    console.error('Get user roadmaps error:', error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Error retrieving roadmaps',
+      message: error.message,
     });
   }
 };
 
-// @route   DELETE /api/roadmap/:id
-// @desc    Delete a roadmap
-// @access  Private
+
+// ================== DELETE ROADMAP ==================
 exports.deleteRoadmap = async (req, res) => {
   try {
     const roadmap = await Roadmap.findById(req.params.id);
@@ -172,29 +341,28 @@ exports.deleteRoadmap = async (req, res) => {
     if (!roadmap) {
       return res.status(404).json({
         success: false,
-        message: 'Roadmap not found',
+        message: "Roadmap not found",
       });
     }
 
-    // Check ownership
     if (roadmap.userId.toString() !== req.user.id) {
       return res.status(403).json({
         success: false,
-        message: 'Not authorized to delete this roadmap',
+        message: "Not authorized",
       });
     }
 
     await Roadmap.findByIdAndDelete(req.params.id);
 
-    res.status(200).json({
+    res.json({
       success: true,
-      message: 'Roadmap deleted successfully',
+      message: "Roadmap deleted",
     });
+
   } catch (error) {
-    console.error('Delete roadmap error:', error);
     res.status(500).json({
       success: false,
-      message: error.message || 'Error deleting roadmap',
+      message: error.message,
     });
   }
 };

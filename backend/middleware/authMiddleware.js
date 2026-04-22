@@ -1,31 +1,34 @@
-const jwt = require('jsonwebtoken');
+const jwt = require("jsonwebtoken");
 
-// Protect routes - verify JWT token
-exports.protect = async (req, res, next) => {
+exports.protect = (req, res, next) => {
   try {
-    let token;
+    // 🔐 Get token from header
+    const authHeader = req.header("Authorization");
 
-    // Get token from header
-    if (req.headers.authorization && req.headers.authorization.startsWith('Bearer')) {
-      token = req.headers.authorization.split(' ')[1];
-    }
-
-    // Check if token exists
-    if (!token) {
+    if (!authHeader || !authHeader.startsWith("Bearer ")) {
       return res.status(401).json({
         success: false,
-        message: 'No token provided, authorization denied',
+        message: "Access denied. No token provided",
       });
     }
 
-    // Verify token
+    const token = authHeader.replace("Bearer ", "");
+
+    // 🔍 Verify token
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+
+    // 🧠 Attach user info
+    req.user = { id: decoded.id };
+
+    // 👉 Next middleware
     next();
+
   } catch (error) {
-    res.status(401).json({
+    console.error("Auth Error:", error.message);
+
+    return res.status(401).json({
       success: false,
-      message: 'Token is not valid',
+      message: "Invalid or expired token",
     });
   }
 };

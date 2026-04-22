@@ -1,88 +1,93 @@
-# 🚀 Complete API Testing Guide - CareerPath AI
+# CareerPath AI - API Testing Guide
 
-## ⚙️ PART 1: SETUP (Do This First)
+Complete guide to test all CareerPath AI backend endpoints using Postman.
 
-### Step 1.1: Install Postman
-1. Go to https://www.postman.com/downloads/
-2. Download for Windows
-3. Install and open Postman
-4. You'll see this screen:
-   ```
-   ┌─────────────────────────────────────┐
-   │         POSTMAN MAIN WINDOW         │
-   │  ┌──────────────────────────────┐  │
-   │  │ File  Edit  View  Help       │  │
-   │  ├──────────────────────────────┤  │
-   │  │  Collections  History  etc   │  │
-   │  └──────────────────────────────┘  │
-   └─────────────────────────────────────┘
-   ```
+## 📋 Table of Contents
 
-### Step 1.2: Start Backend Server
-1. Open **PowerShell** or **Terminal**
-2. Navigate to backend folder:
-   ```bash
-   cd d:\PROJECT\CAREER_AI\backend
-   ```
-3. Start server:
-   ```bash
-   npm run dev
-   ```
-4. You should see:
-   ```
-   ╔════════════════════════════════════════╗
-   ║   CareerPath AI Backend Server         ║
-   ║   Server running on port 5000          ║
-   ║   Environment: development             ║
-   ╚════════════════════════════════════════╝
-   ```
-   ✅ **Server is now running!**
-
-### Step 1.3: Add Gemini API Key to .env
-1. Open file: `d:\PROJECT\CAREER_AI\backend\.env`
-2. Find this line:
-   ```
-   GEMINI_API_KEY=your_gemini_api_key_here
-   ```
-3. Replace with your actual key:
-   ```
-   GEMINI_API_KEY=AIzaSyDxxxxxxxxxxxxxxxxxxxxxxxxxx
-   ```
-4. Save file
-5. **Restart the server** (Stop and run `npm run dev` again)
-   - Stop: Press `Ctrl + C` in terminal
-   - Start: Run `npm run dev` again
-
-✅ **Now you're ready to test!**
+1. [Prerequisites & Setup](#prerequisites--setup)
+2. [Import Postman Collection](#import-postman-collection)
+3. [Test Endpoints](#test-endpoints)
+4. [Common Issues](#common-issues)
 
 ---
 
-## 📥 PART 2: IMPORT POSTMAN COLLECTION
+## ✅ Prerequisites & Setup
 
-### Step 2.1: Import Collection File
+# CareerPath AI - API Testing Guide
+
+Complete guide to test all CareerPath AI backend endpoints using Postman.
+
+## 📋 Table of Contents
+
+1. [Prerequisites & Setup](#prerequisites--setup)
+2. [Import Postman Collection](#import-postman-collection)
+3. [Test Endpoints](#test-endpoints)
+4. [Common Issues](#common-issues)
+
+---
+
+## ✅ Prerequisites & Setup
+
+### 1. Install Postman
+
+1. Download from [postman.com/downloads](https://www.postman.com/downloads/)
+2. Install for your operating system
+3. Create free account (optional but recommended)
+4. Open Postman
+
+### 2. Start Backend Server
+
+```bash
+cd backend
+npm install
+npm run dev
+```
+
+Expected output:
+```
+╔════════════════════════════════════════╗
+║   CareerPath AI Backend Server         ║
+║   Server running on port 5000          ║
+║   Environment: development             ║
+╚════════════════════════════════════════╝
+```
+
+✅ **Server is running on http://localhost:5000**
+
+### 3. Verify Backend is Ready
+
+Test in terminal:
+```bash
+curl http://localhost:5000/api/health
+```
+
+Should return:
+```json
+{
+  "status": "Server is running",
+  "port": "5000"
+}
+```
+
+---
+
+## 📥 Import Postman Collection
+
+### Step 1: Open Import Dialog
+
 1. In Postman, click **File** (top left)
 2. Click **Import**
-3. A popup will appear:
-   ```
-   ┌──────────────────────────────────────┐
-   │         IMPORT                       │
-   ├──────────────────────────────────────┤
-   │ ⚫ File              ← Click this      │
-   │ ⚪ Folder                            │
-   │ ⚪ Link                              │
-   │ ⚪ Raw text                          │
-   └──────────────────────────────────────┘
-   ```
 
-### Step 2.2: Select Collection File
-1. Click **File** tab (if not already selected)
-2. Click **Upload Files** button
-3. Navigate to: `d:\PROJECT\CAREER_AI\`
-4. Find and select: `CareerPath_AI_Postman_Collection.json`
-5. Click **Import**
+### Step 2: Select Collection File
 
-### Step 2.3: Collection Loaded Successfully
-You should see in left sidebar:
+1. Click **File** tab
+2. Click **Upload Files**
+3. Navigate to `CareerPath_AI_Postman_Collection.json`
+4. Click **Import**
+
+### Step 3: Verify Collection
+
+Left sidebar should show:
 ```
 📁 CareerPath AI API
    ├─ 🏥 Health & Test
@@ -90,22 +95,601 @@ You should see in left sidebar:
    │  └─ Test Route
    ├─ 🔐 Authentication
    │  ├─ Signup
+   │  ├─ Verify OTP
    │  ├─ Login
    │  └─ Protected Route - Get Me
-   └─ 🤖 Roadmap (AI Generated)
-      ├─ Generate Roadmap
-      ├─ Get All User Roadmaps
-      ├─ Get Single Roadmap
-      └─ Delete Roadmap
+   ├─ 🤖 Roadmap
+   │  ├─ Generate Roadmap
+   │  ├─ Get All Roadmaps
+   │  ├─ Get Single Roadmap
+   │  └─ Delete Roadmap
+   ├─ 💬 Chat
+   │  └─ Send Message
+   ├─ 🎬 YouTube
+   │  └─ Search Videos
+   └─ 📊 Profile
+      └─ Get Stats
 ```
-
-✅ **Collection imported!**
 
 ---
 
-## 🧪 PART 3: TEST ALL ENDPOINTS
+## 🧪 Test Endpoints
 
-### TEST 1️⃣: HEALTH CHECK (No Auth Needed)
+### Test 1: Health Check
+
+**Endpoint**: `GET /api/health`
+
+**Purpose**: Verify server is running
+
+**Steps**:
+1. Click **Health Check** in sidebar
+2. Click **Send**
+
+**Expected Response** (200 OK):
+```json
+{
+  "status": "Server is running",
+  "port": "5000"
+}
+```
+
+---
+
+### Test 2: API Test
+
+**Endpoint**: `GET /api/test`
+
+**Purpose**: Verify API is responding
+
+**Steps**:
+1. Click **Test Route** in sidebar
+2. Click **Send**
+
+**Expected Response** (200 OK):
+```json
+{
+  "success": true,
+  "message": "API working",
+  "timestamp": "2024-01-15T10:30:00.000Z"
+}
+```
+
+---
+
+### Test 3: Signup (Create User & Send OTP)
+
+**Endpoint**: `POST /api/auth/signup`
+
+**Purpose**: Register new user and send OTP via email
+
+**Steps**:
+
+1. Click **Signup** in sidebar
+2. Click **Body** tab
+3. Update JSON with unique email:
+   ```json
+   {
+     "name": "Your Name",
+     "email": "unique-email@gmail.com",
+     "password": "password123",
+     "passwordConfirm": "password123"
+   }
+   ```
+4. Click **Send**
+
+**Expected Response** (201 Created):
+```json
+{
+  "success": true,
+  "message": "OTP sent to email. Please verify"
+}
+```
+
+⚠️ **Important**: Use a **unique email** each time (Gmail will block duplicates)
+
+**What Happens**: 
+- OTP email sent to your inbox
+- Email valid for 5 minutes
+- Look for "CareerPath AI" sender
+
+---
+
+### Test 4: Verify OTP
+
+**Endpoint**: `POST /api/auth/verify-otp`
+
+**Purpose**: Verify email with OTP code
+
+**Steps**:
+
+1. Check your email inbox for OTP (6 digits)
+2. Click **Verify OTP** in sidebar
+3. Click **Body** tab
+4. Update JSON:
+   ```json
+   {
+     "email": "your-email@gmail.com",
+     "otp": "123456"
+   }
+   ```
+5. Click **Send**
+
+**Expected Response** (200 OK):
+```json
+{
+  "success": true,
+  "message": "Account verified successfully"
+}
+```
+
+---
+
+### Test 5: Login (Get JWT Token)
+
+**Endpoint**: `POST /api/auth/login`
+
+**Purpose**: Login with email/password and get JWT token
+
+**Steps**:
+
+1. Click **Login** in sidebar
+2. Click **Body** tab
+3. Update JSON:
+   ```json
+   {
+     "email": "your-email@gmail.com",
+     "password": "password123"
+   }
+   ```
+4. Click **Send**
+
+**Expected Response** (200 OK):
+```json
+{
+  "success": true,
+  "message": "Login successful",
+  "token": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjY1YTFiMmMzZDRlNWY2ZzdjZTMyZjEyMyIsImlhdCI6MTcwMzc1OTIwMCwiZXhwIjoxNzA2MzUxMjAwfQ.abcd1234...",
+  "user": {
+    "id": "65a1b2c3d4e5f6g7h8i9j0k1",
+    "name": "Your Name",
+    "email": "your-email@gmail.com"
+  }
+}
+```
+
+⭐ **SAVE YOUR TOKEN!** You'll need it for protected routes.
+
+---
+
+### Test 6: Protected Route (Verify Auth)
+
+**Endpoint**: `GET /api/auth/me`
+
+**Purpose**: Test JWT authentication middleware
+
+**Steps**:
+
+1. Click **Protected Route - Get Me** in sidebar
+2. Click **Headers** tab
+3. Find `Authorization` header
+4. Replace `YOUR_TOKEN_HERE` with your actual token from Test 5
+5. Click **Send**
+
+**Expected Response** (200 OK):
+```json
+{
+  "success": true,
+  "message": "This is a protected route",
+  "userId": "65a1b2c3d4e5f6g7h8i9j0k1"
+}
+```
+
+**If you get 401 Unauthorized**:
+- Token might be incorrect
+- Token might be expired (after 7 days)
+- Regenerate token by logging in again
+
+---
+
+### Test 7: Generate Roadmap (AI Powered)
+
+**Endpoint**: `POST /api/roadmap/generate`
+
+**Purpose**: Generate career roadmap using Groq AI
+
+**Steps**:
+
+1. Click **Generate Roadmap** in sidebar
+2. Click **Headers** tab
+3. Update Authorization token (same as Test 6)
+4. Click **Body** tab
+5. Update JSON:
+   ```json
+   {
+     "goal": "Full Stack Developer",
+     "skills": "HTML, CSS, JavaScript basics",
+     "duration": "6 months"
+   }
+   ```
+6. Click **Send**
+7. **Wait 10-15 seconds** ⏳ (AI is generating)
+
+**Expected Response** (201 Created):
+```json
+{
+  "success": true,
+  "roadmap": {
+    "_id": "65a2b3c4d5e6f7g8h9i0j1k2",
+    "userId": "65a1b2c3d4e5f6g7h8i9j0k1",
+    "goal": "Full Stack Developer",
+    "career": "Full Stack Web Developer",
+    "duration": "6 months",
+    "steps": [
+      {
+        "title": "Month 1: Web Fundamentals",
+        "description": "Learn HTML, CSS, and JavaScript basics...",
+        "skills": ["HTML5", "CSS3", "JavaScript"],
+        "tools": ["VS Code", "Chrome DevTools"],
+        "resources": [{...}],
+        "projectIdeas": ["Calculator App", "Todo List"],
+        "weeks": [{...}]
+      },
+      {
+        "title": "Month 2: JavaScript Deep Dive",
+        "description": "Master advanced JavaScript concepts...",
+        "skills": ["ES6+", "Async/Await", "Promises"],
+        "tools": ["Node.js"],
+        "resources": [{...}],
+        "projectIdeas": ["Weather App", "News App"],
+        "weeks": [{...}]
+      }
+    ]
+  }
+}
+```
+
+⭐ **SAVE ROADMAP ID!** You'll need it for next tests.
+
+Look for roadmap `_id` in response.
+
+---
+
+### Test 8: Get All User Roadmaps
+
+**Endpoint**: `GET /api/roadmap`
+
+**Purpose**: Retrieve all roadmaps created by user
+
+**Steps**:
+
+1. Click **Get All Roadmaps** in sidebar
+2. Click **Headers** tab
+3. Verify Authorization token is set
+4. Click **Send**
+
+**Expected Response** (200 OK):
+```json
+{
+  "success": true,
+  "roadmaps": [
+    {
+      "_id": "65a2b3c4d5e6f7g8h9i0j1k2",
+      "goal": "Full Stack Developer",
+      "duration": "6 months",
+      "career": "Full Stack Web Developer",
+      "progress": 0,
+      "isCompleted": false,
+      "createdAt": "2024-01-15T10:30:00Z",
+      "updatedAt": "2024-01-15T10:30:00Z"
+    },
+    {
+      "_id": "65a3b4c5d6e7f8g9h0i1j2k3",
+      "goal": "Data Scientist",
+      "duration": "12 months",
+      "career": "Data Scientist",
+      "progress": 25,
+      "isCompleted": false,
+      "createdAt": "2024-01-14T15:20:00Z",
+      "updatedAt": "2024-01-15T09:15:00Z"
+    }
+  ]
+}
+```
+
+---
+
+### Test 9: Get Single Roadmap
+
+**Endpoint**: `GET /api/roadmap/:id`
+
+**Purpose**: Retrieve detailed roadmap with all steps, weeks, tasks
+
+**Steps**:
+
+1. Click **Get Single Roadmap** in sidebar
+2. Click **Params** tab
+3. In `id` field, paste your roadmap ID from Test 7
+4. Click **Headers** tab
+5. Verify Authorization token
+6. Click **Send**
+
+**Expected Response** (200 OK):
+```json
+{
+  "success": true,
+  "roadmap": {
+    "_id": "65a2b3c4d5e6f7g8h9i0j1k2",
+    "userId": "65a1b2c3d4e5f6g7h8i9j0k1",
+    "goal": "Full Stack Developer",
+    "duration": "6 months",
+    "career": "Full Stack Web Developer",
+    "steps": [
+      {
+        "title": "Month 1: Web Fundamentals",
+        "description": "Learn HTML, CSS, and JavaScript...",
+        "weeks": [
+          {
+            "week": "Week 1",
+            "focus": "HTML Basics",
+            "completed": false,
+            "tasks": [
+              {
+                "title": "Learn HTML Elements",
+                "completed": false,
+                "resources": {
+                  "youtube": [{
+                    "title": "HTML Full Course",
+                    "url": "https://youtube.com/watch?v=...",
+                    "thumbnail": "https://i.ytimg.com/..."
+                  }],
+                  "courses": [{...}],
+                  "docs": [{...}]
+                }
+              }
+            ]
+          }
+        ]
+      }
+    ],
+    "progress": 0,
+    "isCompleted": false
+  }
+}
+```
+
+---
+
+### Test 10: Delete Roadmap
+
+**Endpoint**: `DELETE /api/roadmap/:id`
+
+**Purpose**: Delete a roadmap
+
+**Steps**:
+
+1. Click **Delete Roadmap** in sidebar
+2. Click **Params** tab
+3. In `id` field, paste a roadmap ID
+4. Click **Headers** tab
+5. Verify Authorization token
+6. Click **Send**
+
+**Expected Response** (200 OK):
+```json
+{
+  "success": true,
+  "message": "Roadmap deleted successfully"
+}
+```
+
+---
+
+### Test 11: Chat with AI
+
+**Endpoint**: `POST /api/chat`
+
+**Purpose**: Get AI responses to questions
+
+**Steps**:
+
+1. Click **Send Message** in sidebar
+2. Click **Headers** tab
+3. Verify Authorization token
+4. Click **Body** tab
+5. Update JSON:
+   ```json
+   {
+     "message": "How do I learn React?"
+   }
+   ```
+6. Click **Send**
+
+**Expected Response** (200 OK):
+```json
+{
+  "success": true,
+  "reply": "React is a JavaScript library for building user interfaces. Here's a learning path: 1) Learn JavaScript fundamentals 2) Understand JSX syntax 3) Learn components and hooks 4) Practice with projects..."
+}
+```
+
+---
+
+### Test 12: Search YouTube Videos
+
+**Endpoint**: `GET /api/youtube?query=topic`
+
+**Purpose**: Search for learning videos on YouTube
+
+**Steps**:
+
+1. Click **Search Videos** in sidebar
+2. Click **Params** tab
+3. Set `query` parameter: `"Web Development Tutorial"`
+4. Click **Headers** tab
+5. Verify Authorization token
+6. Click **Send**
+
+**Expected Response** (200 OK):
+```json
+{
+  "success": true,
+  "videos": [
+    {
+      "title": "Web Development Full Course 2024",
+      "channel": "Tech Academy",
+      "url": "https://www.youtube.com/watch?v=...",
+      "thumbnail": "https://i.ytimg.com/...",
+      "views": 1500000,
+      "likes": 45000
+    },
+    {
+      "title": "HTML & CSS Crash Course",
+      "channel": "Code Masters",
+      "url": "https://www.youtube.com/watch?v=...",
+      "thumbnail": "https://i.ytimg.com/...",
+      "views": 800000,
+      "likes": 25000
+    }
+  ]
+}
+```
+
+---
+
+### Test 13: Get User Profile Stats
+
+**Endpoint**: `GET /api/profile`
+
+**Purpose**: Get user's learning progress statistics
+
+**Steps**:
+
+1. Click **Get Stats** in sidebar
+2. Click **Headers** tab
+3. Verify Authorization token
+4. Click **Send**
+
+**Expected Response** (200 OK):
+```json
+{
+  "success": true,
+  "totalRoadmaps": 3,
+  "totalTasks": 120,
+  "completedTasks": 30,
+  "progress": 25
+}
+```
+
+---
+
+## ⚠️ Common Issues
+
+### 1. 401 Unauthorized
+
+**Cause**: Missing or invalid JWT token
+
+**Solution**:
+- Verify Authorization header is set
+- Check token hasn't expired (7 days)
+- Get new token by logging in
+
+```
+Authorization: Bearer YOUR_TOKEN_HERE
+```
+
+### 2. MongoDB Connection Failed
+
+**Cause**: MongoDB not running or wrong connection string
+
+**Solution**:
+- Start MongoDB: `mongod` (Windows) or `brew services start mongodb-community` (Mac)
+- Check `.env` has correct `MONGODB_URL`
+- Verify database is accessible
+
+### 3. Email Not Sending
+
+**Cause**: Gmail credentials incorrect or 2FA not enabled
+
+**Solution**:
+- Verify Gmail 2-Factor Authentication is enabled
+- Use App Password (16 characters), not regular password
+- Check `GMAIL_USER` and `GMAIL_PASSWORD` in `.env`
+- Check spam folder
+
+### 4. Groq API Error
+
+**Error**: `401 Unauthorized` or API returns error
+
+**Solution**:
+- Verify `GROQ_API_KEY` is correct in `.env`
+- Check for spaces in key
+- Regenerate key from Groq console
+- Verify API quota limits
+
+### 5. YouTube API Error
+
+**Error**: `403 Forbidden` or quota exceeded
+
+**Solution**:
+- Verify `YOUTUBE_API_KEY` is enabled
+- Check YouTube API v3 is enabled in Google Cloud
+- Verify API key restrictions match domain
+- Check daily quota (10,000 units/day)
+
+### 6. Port Already in Use
+
+**Error**: `listen EADDRINUSE: address already in use :::5000`
+
+**Solution**:
+```bash
+# Windows: Find and kill process using port 5000
+netstat -ano | findstr :5000
+taskkill /PID <PID> /F
+
+# Mac/Linux
+lsof -i :5000
+kill -9 <PID>
+
+# Or use different port
+PORT=5001 npm run dev
+```
+
+### 7. CORS Error
+
+**Error**: `Access to XMLHttpRequest blocked by CORS`
+
+**Solution**:
+- CORS is enabled in server.js
+- Verify frontend URL is correct
+- Check Network tab in browser
+
+---
+
+## 🎯 Testing Checklist
+
+- [ ] Health Check passes
+- [ ] API Test passes
+- [ ] Signup creates user (check email for OTP)
+- [ ] OTP verification works
+- [ ] Login returns token
+- [ ] Protected route accepts token
+- [ ] Generate Roadmap works (takes 10-15 seconds)
+- [ ] Get All Roadmaps returns list
+- [ ] Get Single Roadmap returns full details
+- [ ] Delete Roadmap works
+- [ ] Chat responds with AI message
+- [ ] YouTube search returns videos
+- [ ] Profile stats calculate correctly
+
+---
+
+## 📚 API Documentation
+
+For detailed API documentation, see [backend/README.md](backend/README.md)
+
+---
+
+**Testing Guide maintained with ❤️ for CareerPath AI**
 
 **Purpose:** Check if server is running
 

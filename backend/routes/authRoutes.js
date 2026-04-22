@@ -1,14 +1,23 @@
 const express = require('express');
-const { signup, login } = require('../controllers/authController');
+
+const { 
+  signup, 
+  login, 
+  verifyOTP, 
+  resendOTP 
+} = require('../controllers/authController');
+
 const { protect } = require('../middleware/authMiddleware');
 
 const router = express.Router();
 
 // Public routes
-router.post('/signup', signup);
-router.post('/login', login);
+router.post("/signup", signup);
+router.post("/verify-otp", verifyOTP);
+router.post("/login", login);
+router.post("/resend-otp", resendOTP);
 
-// Protected route example
+// Protected route
 router.get('/me', protect, (req, res) => {
   res.json({
     success: true,

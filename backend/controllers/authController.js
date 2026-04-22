@@ -1,116 +1,182 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+const User = require("../models/User");
+const jwt = require("jsonwebtoken");
+const mailSender = require("../utils/mailSender");
 
-// Generate JWT Token
+// 🔐 Generate JWT
 const generateToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: '30d',
+    expiresIn: "7d",
   });
 };
 
-// @route   POST /api/auth/signup
-// @desc    Register a user
-// @access  Public
+// ================== SIGNUP (SEND OTP) ==================
 exports.signup = async (req, res) => {
   try {
     const { name, email, password, passwordConfirm } = req.body;
 
-    // Validate input
+    // ✅ Validation
     if (!name || !email || !password || !passwordConfirm) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide all required fields',
+        message: "All fields are required",
       });
     }
 
-    // Check if passwords match
     if (password !== passwordConfirm) {
       return res.status(400).json({
         success: false,
-        message: 'Passwords do not match',
+        message: "Passwords do not match",
       });
     }
 
-    // Check if user already exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
+    // 🔍 Check existing user
+    let user = await User.findOne({ email });
+
+    // 🔢 Generate OTP
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    // 🟡 Case 1: User exists but NOT verified
+    if (user && !user.isVerified) {
+      user.otp = otp;
+      user.otpExpiry = Date.now() + 5 * 60 * 1000;
+      await user.save();
+
+      await mailSender(email, "CareerPath OTP", `Your OTP is ${otp}`);
+
+      return res.json({
+        success: true,
+        message: "OTP resent. Please verify your email",
+      });
+    }
+
+    // 🔴 Case 2: User exists and verified
+    if (user && user.isVerified) {
       return res.status(400).json({
         success: false,
-        message: 'Email already in use',
+        message: "User already exists",
       });
     }
 
-    // Create user
-    const user = await User.create({
+    // 🟢 Case 3: New user (IMPORTANT: NO HASH HERE ❌)
+    user = await User.create({
       name,
       email,
-      password,
+      password, // ✅ raw password (model will hash)
+      otp,
+      otpExpiry: Date.now() + 5 * 60 * 1000,
+      isVerified: false,
     });
 
-    // Generate token
-    const token = generateToken(user._id);
+    await mailSender(email, "CareerPath OTP", `Your OTP is ${otp}`);
 
-    // Return response
     res.status(201).json({
       success: true,
-      message: 'User registered successfully',
-      token,
-      user: {
-        id: user._id,
-        name: user.name,
-        email: user.email,
-      },
+      message: "OTP sent to email. Please verify",
     });
+
   } catch (error) {
-    console.error('Signup error:', error);
+    console.error("Signup Error:", error.message);
+
     res.status(500).json({
       success: false,
-      message: error.message || 'Error during signup',
+      message: "Signup failed",
     });
   }
 };
 
-// @route   POST /api/auth/login
-// @desc    Login a user
-// @access  Public
+// ================== VERIFY OTP ==================
+exports.verifyOTP = async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({
+        success: false,
+        message: "Email and OTP required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user) {
+      return res.status(400).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    if (user.otp !== otp || user.otpExpiry < Date.now()) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid or expired OTP",
+      });
+    }
+
+    // ✅ Verify user
+    user.isVerified = true;
+    user.otp = null;
+    user.otpExpiry = null;
+
+    await user.save();
+
+    res.json({
+      success: true,
+      message: "Account verified successfully",
+    });
+
+  } catch (error) {
+    console.error("OTP Error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "OTP verification failed",
+    });
+  }
+};
+
+// ================== LOGIN ==================
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
 
-    // Validate input
+    // ✅ Validation
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Please provide email and password',
+        message: "Email and password required",
       });
     }
 
-    // Check if user exists and get password
-    const user = await User.findOne({ email }).select('+password');
+    const user = await User.findOne({ email }).select("+password");
 
     if (!user) {
-      return res.status(401).json({
+      return res.status(400).json({
         success: false,
-        message: 'Invalid credentials',
+        message: "User not found",
       });
     }
 
-    // Check if password matches
-    const passwordMatch = await user.matchPassword(password);
-    if (!passwordMatch) {
-      return res.status(401).json({
+    if (!user.isVerified) {
+      return res.status(400).json({
         success: false,
-        message: 'Invalid credentials',
+        message: "Please verify OTP first",
       });
     }
 
-    // Generate token
+    const isMatch = await user.matchPassword(password);
+
+    if (!isMatch) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid password",
+      });
+    }
+
     const token = generateToken(user._id);
 
-    // Return response
-    res.status(200).json({
+    res.json({
       success: true,
-      message: 'Login successful',
+      message: "Login successful",
       token,
       user: {
         id: user._id,
@@ -118,11 +184,57 @@ exports.login = async (req, res) => {
         email: user.email,
       },
     });
+
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login Error:", error.message);
+
     res.status(500).json({
       success: false,
-      message: error.message || 'Error during login',
+      message: "Login failed",
+    });
+  }
+};
+
+// ================== RESEND OTP ==================
+exports.resendOTP = async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({
+        success: false,
+        message: "Email required",
+      });
+    }
+
+    const user = await User.findOne({ email });
+
+    if (!user || user.isVerified) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid request",
+      });
+    }
+
+    const otp = Math.floor(100000 + Math.random() * 900000).toString();
+
+    user.otp = otp;
+    user.otpExpiry = Date.now() + 5 * 60 * 1000;
+    await user.save();
+
+    await mailSender(email, "CareerPath OTP", `Your OTP is ${otp}`);
+
+    res.json({
+      success: true,
+      message: "OTP resent successfully",
+    });
+
+  } catch (error) {
+    console.error("Resend OTP Error:", error.message);
+
+    res.status(500).json({
+      success: false,
+      message: "Failed to resend OTP",
     });
   }
 };

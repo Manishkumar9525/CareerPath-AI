@@ -4,6 +4,7 @@ const {
   getRoadmap,
   getUserRoadmaps,
   deleteRoadmap,
+  toggleTask,
 } = require('../controllers/roadmapController');
 const { protect } = require('../middleware/authMiddleware');
 
@@ -23,5 +24,7 @@ router.get('/:id', getRoadmap);
 
 // Delete roadmap
 router.delete('/:id', deleteRoadmap);
+
+router.patch('/:id/task', toggleTask);
 
 module.exports = router;
