@@ -82,14 +82,20 @@ export default function Navbar() {
           <div className="flex items-center gap-3">
             <ThemeToggle />
 
-            <button className="text-sm text-muted-foreground hover:text-foreground transition px-2 py-1 rounded-md">
+            <Link
+              to="/login"
+              className="text-sm text-muted-foreground hover:text-foreground transition px-2 py-1 rounded-md"
+            >
               Sign in
-            </button>
+            </Link>
           </div>
 
-          <button className="bg-foreground text-background px-5 py-2 rounded-full shadow-soft hover:scale-105 transition">
+          <Link
+            to="/signup"
+            className="bg-foreground text-background px-5 py-2 rounded-full shadow-soft hover:scale-105 transition"
+          >
             Get started
-          </button>
+          </Link>
 
         </div>
 
