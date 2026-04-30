@@ -1,372 +1,187 @@
 # Contributing to CareerPath AI
 
-We welcome contributions from developers of all skill levels! This document provides guidelines for contributing to the project.
+Thank you for your interest in contributing. This guide describes contribution standards and workflow for this repository.
 
-## 📋 Table of Contents
+## Table of Contents
 
-1. [Code of Conduct](#code-of-conduct)
-2. [Getting Started](#getting-started)
-3. [Development Workflow](#development-workflow)
-4. [Coding Standards](#coding-standards)
-5. [Commit Guidelines](#commit-guidelines)
-6. [Pull Request Process](#pull-request-process)
-7. [Reporting Issues](#reporting-issues)
-8. [Priority Areas](#priority-areas)
+1. Code of Conduct
+2. Getting Started
+3. Development Workflow
+4. Coding Standards
+5. Commit Guidelines
+6. Pull Request Process
+7. Reporting Issues
 
----
+## Code of Conduct
 
-## 🤝 Code of Conduct
+- Be respectful and constructive
+- Keep communication professional and inclusive
+- Focus on code quality, reproducibility, and clear feedback
 
-- Be respectful and inclusive
-- Avoid harassment or discriminatory language
-- Report unacceptable behavior to maintainers
-- Focus on constructive feedback
+## Getting Started
 
----
-
-## 🚀 Getting Started
-
-### 1. Fork the Repository
-
-Click "Fork" on GitHub to create your own copy.
-
-### 2. Clone Your Fork
+### 1) Fork and clone
 
 ```bash
 git clone https://github.com/YOUR_USERNAME/CareerPath-AI.git
 cd CareerPath-AI
 ```
 
-### 3. Add Upstream Remote
+### 2) Add upstream remote
 
 ```bash
 git remote add upstream https://github.com/ORIGINAL_OWNER/CareerPath-AI.git
 ```
 
-### 4. Create Feature Branch
+### 3) Create a branch
 
 ```bash
-git checkout -b feature/your-feature-name
+git checkout -b feature/short-description
 ```
 
-Branch naming convention:
-- `feature/description` - New feature
-- `bugfix/description` - Bug fix
-- `docs/description` - Documentation
-- `refactor/description` - Code refactoring
+Branch naming examples:
 
-### 5. Set Up Development Environment
+- feature/<description>
+- bugfix/<description>
+- docs/<description>
+- refactor/<description>
+
+### 4) Install dependencies
 
 ```bash
-cd backend
 npm install
-cp .env.example .env
-# Edit .env with your test credentials
+npm install --prefix backend
+npm install --prefix frontend
+```
+
+### 5) Configure backend environment
+
+```bash
+copy backend\.env.example backend\.env
+```
+
+## Development Workflow
+
+1. Sync your branch with upstream main
+2. Make focused changes with clear scope
+3. Test affected flows locally
+4. Update relevant documentation
+5. Open a pull request
+
+Before committing:
+
+```bash
 npm run dev
+npm run lint --prefix frontend
 ```
 
----
+## Coding Standards
 
-## 🔄 Development Workflow
+### General
 
-### Making Changes
+- Keep functions and components focused
+- Prefer clear names over short names
+- Keep API contracts consistent
+- Avoid breaking existing behavior without documentation
 
-1. **Create feature branch** from `main`
-2. **Make small, focused commits** (one feature per commit)
-3. **Test your changes** thoroughly
-4. **Write/update tests** if applicable
-5. **Update documentation** if needed
+### JavaScript conventions
 
-### Before Committing
+- Use camelCase for variables/functions
+- Use PascalCase for React components
+- Use const/let (avoid var)
+- Handle errors with clear messages and status codes
 
-```bash
-# Check code quality
-npm run lint  # if available
+### API response consistency
 
-# Run tests
-npm test  # if available
+Preferred response shape:
 
-# Verify API changes work
-# Use Postman collection to test
-```
-
----
-
-## 📝 Coding Standards
-
-### JavaScript Style
-
-- Use **ES6+ syntax** (arrow functions, const/let, template literals)
-- Follow **consistent naming**:
-  - Variables: `camelCase`
-  - Functions: `camelCase`
-  - Classes: `PascalCase`
-  - Constants: `UPPER_SNAKE_CASE`
-
-### Comments
-
-```javascript
-// Good: Clear explanation
-const generateOTP = () => {
-  // OTP valid for 5 minutes
-  const expiry = Date.now() + 5 * 60 * 1000;
-  return expiry;
-};
-
-// Avoid: Obvious comments
-const x = 5; // x is 5
-```
-
-### Error Handling
-
-```javascript
-// Good: Specific error messages
-if (!email) {
-  return res.status(400).json({
-    success: false,
-    message: "Email is required",
-  });
-}
-
-// Avoid: Generic errors
-if (!email) {
-  throw new Error("error");
+```json
+{
+  "success": true,
+  "message": "optional",
+  "data": {}
 }
 ```
 
-### MongoDB Models
+## Commit Guidelines
 
-- Use proper validation in schemas
-- Add meaningful field descriptions
-- Index frequently queried fields
-- Use timestamps (`createdAt`, `updatedAt`)
+Commit format:
 
-### API Endpoints
-
-- Use correct HTTP methods (GET, POST, PUT, DELETE)
-- Use proper status codes (200, 201, 400, 401, 404, 500)
-- Return consistent JSON format:
-  ```json
-  {
-    "success": true/false,
-    "message": "descriptive message",
-    "data": { /* optional */ }
-  }
-  ```
-
----
-
-## 💬 Commit Guidelines
-
-### Commit Message Format
-
-```
-type(scope): subject
-
-body (optional)
-
-footer (optional)
+```text
+type(scope): short summary
 ```
 
-### Types
+Types:
 
-- `feat`: New feature
-- `fix`: Bug fix
-- `docs`: Documentation
-- `style`: Formatting (not logic)
-- `refactor`: Code restructuring
-- `test`: Test additions/updates
-- `chore`: Build, dependencies
-
-### Examples
-
-```bash
-git commit -m "feat(auth): add email OTP verification"
-git commit -m "fix(roadmap): handle missing YouTube results"
-git commit -m "docs(backend): update API endpoint documentation"
-git commit -m "refactor(controllers): simplify error handling"
-```
-
----
-
-## 📤 Pull Request Process
-
-### 1. Before Submitting PR
-
-- ✅ Rebase with latest `main`:
-  ```bash
-  git fetch upstream
-  git rebase upstream/main
-  ```
-- ✅ Verify all tests pass
-- ✅ Update related documentation
-- ✅ Add comments for complex logic
-
-### 2. Create Pull Request
-
-**Title Format**: `[type] Brief description`
+- feat
+- fix
+- docs
+- refactor
+- test
+- chore
 
 Examples:
-- `[feature] Add AI chat endpoint`
-- `[bugfix] Fix YouTube API 403 error`
-- `[docs] Update setup guide`
 
-**Description Template**:
+```bash
+git commit -m "feat(roadmap): improve duplicate detection"
+git commit -m "fix(profile): handle missing avatar state"
+git commit -m "docs(readme): clarify setup flow"
+```
+
+## Pull Request Process
+
+### Before opening PR
+
+- Rebase on latest upstream/main
+- Ensure changed flows are tested
+- Update docs for API or behavior changes
+
+### PR checklist
+
+- [ ] Scope is clear and focused
+- [ ] Code follows repository style
+- [ ] No unrelated file churn
+- [ ] Docs updated when needed
+- [ ] Screenshots included for UI changes (if applicable)
+
+### PR description template
 
 ```markdown
-## Description
-Brief explanation of changes
+## Summary
+What changed and why
 
-## Type of Change
-- [ ] New feature
-- [ ] Bug fix
-- [ ] Documentation update
-- [ ] Code refactoring
+## Type
+feature | bugfix | docs | refactor
 
 ## Testing
-- How to test the changes
+How to verify
+
+## Notes
+Any migration or compatibility impact
+```
+
+## Reporting Issues
+
+When creating an issue, include:
+
+- Clear title
 - Expected behavior
+- Actual behavior
+- Steps to reproduce
+- Environment details (OS, Node version, branch/commit)
+- Logs or screenshots when possible
 
-## Checklist
-- [ ] Code follows style guidelines
-- [ ] Comments added for complexity
-- [ ] Documentation updated
-- [ ] No breaking changes
-- [ ] Tests pass
+Issue title format recommendation:
+
+```text
+[Component] Short description
 ```
 
-### 3. Review Process
+## Documentation Contributions
 
-- Maintainers will review within 2-3 days
-- Address feedback professionally
-- Update PR when changes are requested
-- Squash commits if requested
+Documentation improvements are welcome and should:
 
-### 4. Merge
-
-- Maintainers merge when approved
-- Delete branch after merge
-
----
-
-## 🐛 Reporting Issues
-
-### Before Reporting
-
-- Search existing issues
-- Check latest `main` branch
-- Try to reproduce with clean setup
-
-### Issue Template
-
-**Title**: `[Component] Brief description`
-
-**Content**:
-```markdown
-## Description
-What's the issue?
-
-## Expected Behavior
-What should happen?
-
-## Actual Behavior
-What actually happens?
-
-## Steps to Reproduce
-1. Step 1
-2. Step 2
-3. ...
-
-## Environment
-- OS: (Windows/Mac/Linux)
-- Node version: (node --version)
-- Backend version: (commit hash or branch)
-
-## Logs/Screenshots
-[If applicable]
-
-## Possible Solution
-[If you have ideas]
-```
-
----
-
-## ⭐ Priority Areas for Contribution
-
-### High Priority 🔴
-
-1. **Groq API Stability**
-   - Error handling for failed requests
-   - Fallback to mock roadmap
-   - Proper error messages
-
-2. **YouTube API Reliability**
-   - Handle quota exceeded errors
-   - Improve video ranking algorithm
-   - Cache results when possible
-
-3. **Email Delivery**
-   - Handle Gmail failures
-   - Implement email retry logic
-   - Support other email providers
-
-### Medium Priority 🟡
-
-4. **Input Validation**
-   - Validate all request bodies
-   - Sanitize user inputs
-   - Prevent injection attacks
-
-5. **Error Messages**
-   - Make errors user-friendly
-   - Consistent error format
-   - Helpful debugging info
-
-6. **Tests**
-   - Unit tests for controllers
-   - Integration tests for APIs
-   - Test coverage reporting
-
-### Nice to Have 🟢
-
-7. **Performance**
-   - Cache frequently accessed data
-   - Optimize database queries
-   - Implement pagination
-
-8. **Documentation**
-   - Update API docs
-   - Add code examples
-   - Improve comments
-
-9. **Features**
-   - Additional AI models
-   - More resource types
-   - User preferences
-
----
-
-## 📚 Resources
-
-- [Git Guide](https://git-scm.com/book/en/v2)
-- [GitHub Flow](https://guides.github.com/introduction/flow/)
-- [Conventional Commits](https://www.conventionalcommits.org/)
-- [Express Best Practices](https://expressjs.com/en/advanced/best-practice-performance.html)
-- [MongoDB Best Practices](https://docs.mongodb.com/manual/administration/production-checklist/)
-
----
-
-## ❓ Questions?
-
-- Open a GitHub discussion
-- Ask in the issue comments
-- Check existing documentation
-
----
-
-## 🎉 Thank You!
-
-Your contributions help make CareerPath AI better for everyone. We appreciate your effort!
-
-**Happy Contributing!** 🚀
-
+- Preserve existing file structure
+- Keep content concise and technically accurate
+- Explain flow, setup, and integration clearly
+- Avoid duplicate sections across files

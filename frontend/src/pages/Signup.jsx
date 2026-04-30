@@ -2,26 +2,73 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaLock, FaRegEnvelope, FaRegUser } from "react-icons/fa6";
 import ThemeToggle from "../components/common/ThemeToggle";
+import { signupUser } from "../services/authService";
+import { toast } from "react-toastify";
 
 export default function Signup() {
   const navigate = useNavigate();
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState(""); // ✅ NEW
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!fullName.trim() || !email.trim() || !password.trim()) {
+    // ✅ Basic validation
+    if (!fullName.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+      toast.error("All fields are required");
       return;
     }
 
-    setLoading(true);
-    setTimeout(() => {
+    // ✅ Email validation
+    const emailRegex = /^\S+@\S+\.\S+$/;
+    if (!emailRegex.test(email)) {
+      toast.error("Please enter a valid email");
+      return;
+    }
+
+    // ✅ Strong password check
+    const strongPasswordRegex =
+      /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&]).{6,}$/;
+
+    if (!strongPasswordRegex.test(password)) {
+      toast.error(
+        "Password must have 6+ chars, uppercase, lowercase, number & special character"
+      );
+      return;
+    }
+
+    // ✅ MOST IMPORTANT (backend match)
+    if (password !== confirmPassword) {
+      toast.error("Passwords do not match");
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      await signupUser({
+        name: fullName,
+        email,
+        password,
+        passwordConfirm: confirmPassword, // ✅ CORRECT
+      });
+
+      toast.success("OTP sent successfully ");
+
+      setTimeout(() => {
+        navigate("/verify-otp", { state: { email } });
+      }, 400);
+
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Signup failed");
+    } finally {
       setLoading(false);
-      navigate("/verify-otp", { state: { email } });
-    }, 800);
+    }
   };
 
   return (
@@ -29,8 +76,9 @@ export default function Signup() {
       <header className="border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-3">
-            
-            <span className="font-display text-2xl leading-none">CareerPath</span>
+            <span className="font-display text-2xl leading-none">
+              CareerPath
+            </span>
           </Link>
           <ThemeToggle />
         </div>
@@ -51,14 +99,14 @@ export default function Signup() {
 
           <section className="rounded-3xl border border-border bg-card p-7 shadow-card sm:p-8">
             <form onSubmit={handleSubmit} className="space-y-5">
+
               <Field label="Full name" icon={<FaRegUser />}>
                 <input
                   type="text"
                   value={fullName}
-                  onChange={(event) => setFullName(event.target.value)}
+                  onChange={(e) => setFullName(e.target.value)}
                   placeholder="Jane Doe"
-                  autoComplete="name"
-                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 outline-none transition focus:border-primary"
+                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 outline-none focus:border-primary"
                 />
               </Field>
 
@@ -66,10 +114,9 @@ export default function Signup() {
                 <input
                   type="email"
                   value={email}
-                  onChange={(event) => setEmail(event.target.value)}
+                  onChange={(e) => setEmail(e.target.value)}
                   placeholder="jane@example.com"
-                  autoComplete="email"
-                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 outline-none transition focus:border-primary"
+                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 outline-none focus:border-primary"
                 />
               </Field>
 
@@ -77,17 +124,27 @@ export default function Signup() {
                 <input
                   type="password"
                   value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  placeholder="Create a secure password"
-                  autoComplete="new-password"
-                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 outline-none transition focus:border-primary"
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Create password"
+                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 outline-none focus:border-primary"
+                />
+              </Field>
+
+              {/* ✅ NEW FIELD */}
+              <Field label="Confirm Password" icon={<FaLock />}>
+                <input
+                  type="password"
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Confirm password"
+                  className="h-11 w-full rounded-xl border border-border bg-surface px-4 outline-none focus:border-primary"
                 />
               </Field>
 
               <button
                 type="submit"
                 disabled={loading}
-                className="h-11 w-full rounded-full bg-primary font-medium text-primary-foreground shadow-soft transition hover:opacity-90 disabled:cursor-not-allowed"
+                className="h-11 w-full rounded-full bg-primary text-primary-foreground"
               >
                 {loading ? "Sending code..." : "Continue"}
               </button>

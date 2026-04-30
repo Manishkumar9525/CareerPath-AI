@@ -2,6 +2,37 @@ const axios = require("axios");
 const Roadmap = require("../models/Roadmap");
 const { getAllResources } = require("../utils/resourceService");
 
+const normalizeText = (value = "") =>
+  value
+    .trim()
+    .replace(/\s+/g, " ");
+
+const escapeRegExp = (value = "") =>
+  value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+const computeRoadmapProgress = (steps = []) => {
+  let totalTasks = 0;
+  let completedTasks = 0;
+
+  steps.forEach((month) => {
+    (month.weeks || []).forEach((week) => {
+      (week.tasks || []).forEach((task) => {
+        totalTasks += 1;
+        if (task.completed) {
+          completedTasks += 1;
+        }
+      });
+    });
+  });
+
+  return {
+    totalTasks,
+    completedTasks,
+    progress:
+      totalTasks === 0 ? 0 : Math.round((completedTasks / totalTasks) * 100),
+  };
+};
+
 
 // ================== GENERATE ROADMAP ==================
 exports.generateRoadmap = async (req, res) => {
@@ -15,13 +46,44 @@ exports.generateRoadmap = async (req, res) => {
       });
     }
 
-    const userSkills =
-      skills && skills.trim() !== "" ? skills : "beginner";
+    const userId = req.user.id;
 
+    // Normalize inputs to keep duplicate checks consistent.
+    const cleanGoal = normalizeText(goal);
+    const normalizedGoal = cleanGoal.toLowerCase();
+    const cleanDuration = normalizeText(duration);
+    const normalizedDuration = cleanDuration.toLowerCase();
+
+    const userSkills =
+      skills && skills.trim() !== "" ? normalizeText(skills) : "beginner";
+
+    // Prevent duplicates by matching goal and duration case-insensitively.
+    const existing = await Roadmap.findOne({
+      userId,
+      goal: {
+        $regex: new RegExp(`^${escapeRegExp(normalizedGoal)}$`, "i"),
+      },
+      duration: {
+        $regex: new RegExp(`^${escapeRegExp(normalizedDuration)}$`, "i"),
+      },
+    });
+
+    if (existing) {
+      return res.status(200).json({
+        success: true,
+        message: "Roadmap already exists",
+        roadmap: existing,
+        fromCache: true,
+      });
+    }
+
+    // ======================================================
+    // 🚀 AI GENERATION
+    // ======================================================
     const prompt = `
 You are a professional career mentor AI.
 
-Create a COMPLETE and DETAILED roadmap for becoming a ${goal}.
+Create a COMPLETE and DETAILED roadmap for becoming a ${cleanGoal}.
 
 User details:
 - Current Skills: ${userSkills}
@@ -40,7 +102,7 @@ STRICT RULES:
 - Return ONLY JSON
 
 {
-  "career": "${goal}",
+  "career": "${cleanGoal}",
   "steps": [
     {
       "title": "Month 1",
@@ -78,7 +140,9 @@ STRICT RULES:
 
     let data = response.data.choices[0].message.content;
 
-    // 🔥 CLEAN RESPONSE
+    // ======================================================
+    // 🔧 CLEAN JSON
+    // ======================================================
     const cleanJSON = (str) => {
       return str
         .replace(/```json|```/g, "")
@@ -90,10 +154,9 @@ STRICT RULES:
     let parsed;
 
     try {
-      const fixed = cleanJSON(data);
-      parsed = JSON.parse(fixed);
+      parsed = JSON.parse(cleanJSON(data));
     } catch (err) {
-      console.error("❌ Broken AI JSON:", data);
+      console.error("Broken AI JSON:", data);
 
       return res.status(500).json({
         success: false,
@@ -108,93 +171,97 @@ STRICT RULES:
       });
     }
 
-    // ✅ MONTH → ONLY YOUTUBE
-    const monthRes = await getAllResources(goal);
+    // ======================================================
+    // 🎯 RESOURCE ENRICHMENT
+    // ======================================================
+    const monthRes = await getAllResources(cleanGoal);
 
     parsed.steps = await Promise.all(
-      parsed.steps.map(async (step) => {
-        return {
-          title: step.title || "Untitled Month",
+      parsed.steps.map(async (step) => ({
+        title: step.title || "Untitled Month",
 
-          description:
-            step.description && step.description.length > 10
-              ? step.description
-              : "This month focuses on building fundamentals.",
+        description:
+          step.description && step.description.length > 10
+            ? step.description
+            : "This month focuses on building fundamentals.",
 
-          skills: Array.isArray(step.skills) ? step.skills : [],
-          tools: Array.isArray(step.tools) ? step.tools : [],
+        skills: Array.isArray(step.skills) ? step.skills : [],
+        tools: Array.isArray(step.tools) ? step.tools : [],
 
-          resources:
-            monthRes.youtube.length > 0
-              ? monthRes.youtube
-              : [{ title: "No videos found", url: "" }],
+        resources:
+          monthRes.youtube.length > 0
+            ? monthRes.youtube
+            : [{ title: "No videos found", url: "" }],
 
-          projectIdeas: Array.isArray(step.projectIdeas)
-            ? step.projectIdeas
-            : [],
+        projectIdeas: Array.isArray(step.projectIdeas)
+          ? step.projectIdeas
+          : [],
 
-          weeks: await Promise.all(
-            (step.weeks || []).map(async (week, index) => ({
-              week: week.week || `Week ${index + 1}`,
-              focus: week.focus || "Core concept",
+        weeks: await Promise.all(
+          (step.weeks || []).map(async (week, index) => ({
+            week: week.week || `Week ${index + 1}`,
+            focus: week.focus || "Core concept",
 
-              tasks: await Promise.all(
-                (week.tasks || []).map(async (task) => {
-                  const cleanTopic = task
-                    .replace(/learn|understand|study|practice/gi, "")
-                    .replace(/\(.*?\)/g, "")
-                    .split(",")[0]
-                    .trim()
-                    .slice(0, 50);
+            tasks: await Promise.all(
+              (week.tasks || []).map(async (task) => {
+                const cleanTopic = task
+                  .replace(/learn|understand|study|practice/gi, "")
+                  .replace(/\(.*?\)/g, "")
+                  .split(",")[0]
+                  .trim()
+                  .slice(0, 50);
 
-                  const res = await getAllResources(cleanTopic);
+                const res = await getAllResources(cleanTopic);
 
-                  return {
-                    title: task,
-                    completed: false,
-                    resources: {
-                      youtube:
-                        res.youtube.length > 0
-                          ? res.youtube
-                          : [{ title: "No videos found", url: "" }],
+                return {
+                  title: task,
+                  completed: false,
+                  resources: {
+                    youtube:
+                      res.youtube.length > 0
+                        ? res.youtube
+                        : [{ title: "No videos found", url: "" }],
 
-                      courses:
-                        res.courses.length > 0
-                          ? res.courses
-                          : [{ title: "No courses found", url: "" }],
+                    courses:
+                      res.courses.length > 0
+                        ? res.courses
+                        : [{ title: "No courses found", url: "" }],
 
-                      docs:
-                        res.docs.length > 0
-                          ? res.docs
-                          : [{ title: "No documentation found", url: "" }],
-                    },
-                  };
-                })
-              ),
+                    docs:
+                      res.docs.length > 0
+                        ? res.docs
+                        : [{ title: "No documentation found", url: "" }],
+                  },
+                };
+              })
+            ),
 
-              completed: false,
-            }))
-          ),
-        };
-      })
+            completed: false,
+          }))
+        ),
+      }))
     );
 
+    // ======================================================
+    // 💾 SAVE ROADMAP
+    // ======================================================
     const roadmap = await Roadmap.create({
-      userId: req.user.id,
-      goal,
+      userId,
+      goal: normalizedGoal,
       skills: userSkills,
-      duration,
-      career: parsed.career || goal,
+      duration: cleanDuration,
+      career: cleanGoal,
       steps: parsed.steps,
     });
 
     res.status(201).json({
       success: true,
       roadmap,
+      fromCache: false,
     });
 
   } catch (error) {
-    console.error("🔥 Server Error:", error.message);
+    console.error("Roadmap generation failed:", error.message);
 
     res.status(500).json({
       success: false,
@@ -202,11 +269,23 @@ STRICT RULES:
     });
   }
 };
+
 // ================== TOGGLE TASK ==================
 exports.toggleTask = async (req, res) => {
   try {
     const { id } = req.params;
     let { monthIndex, weekIndex, taskIndex } = req.body;
+
+    if (taskIndex === undefined || taskIndex === null) {
+      return res.status(400).json({
+        success: false,
+        message: "taskIndex is required",
+      });
+    }
+
+    monthIndex = Number.isInteger(monthIndex) ? monthIndex : Number(monthIndex);
+    weekIndex = Number.isInteger(weekIndex) ? weekIndex : Number(weekIndex);
+    taskIndex = Number.isInteger(taskIndex) ? taskIndex : Number(taskIndex);
 
     const roadmap = await Roadmap.findById(id);
 
@@ -227,12 +306,23 @@ exports.toggleTask = async (req, res) => {
     let task;
 
     if (
-      monthIndex === undefined &&
-      weekIndex === undefined &&
-      taskIndex !== undefined
+      Number.isNaN(monthIndex) &&
+      Number.isNaN(weekIndex) &&
+      !Number.isNaN(taskIndex)
     ) {
       monthIndex = 0;
       weekIndex = 0;
+    }
+
+    if (
+      Number.isNaN(monthIndex) ||
+      Number.isNaN(weekIndex) ||
+      Number.isNaN(taskIndex)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "monthIndex, weekIndex and taskIndex must be valid numbers",
+      });
     }
 
     task =
@@ -250,19 +340,9 @@ exports.toggleTask = async (req, res) => {
     const week = roadmap.steps[monthIndex].weeks[weekIndex];
     week.completed = week.tasks.every((t) => t.completed);
 
-    let total = 0;
-    let done = 0;
+    const progressStats = computeRoadmapProgress(roadmap.steps || []);
 
-    roadmap.steps.forEach((month) => {
-      month.weeks.forEach((week) => {
-        week.tasks.forEach((task) => {
-          total++;
-          if (task.completed) done++;
-        });
-      });
-    });
-
-    roadmap.progress = total === 0 ? 0 : Math.round((done / total) * 100);
+    roadmap.progress = progressStats.progress;
     roadmap.isCompleted = roadmap.progress === 100;
 
     await roadmap.save();
@@ -270,7 +350,12 @@ exports.toggleTask = async (req, res) => {
     res.json({
       success: true,
       message: "Task updated",
+      roadmap,
       progress: roadmap.progress,
+      stats: {
+        totalTasks: progressStats.totalTasks,
+        completedTasks: progressStats.completedTasks,
+      },
     });
 
   } catch (error) {
@@ -317,7 +402,9 @@ exports.getRoadmap = async (req, res) => {
 // ================== GET ALL ROADMAPS ==================
 exports.getUserRoadmaps = async (req, res) => {
   try {
-    const roadmaps = await Roadmap.find({ userId: req.user.id });
+    const roadmaps = await Roadmap.find({ userId: req.user.id })
+      .sort({ createdAt: -1 })
+      .limit(10);
 
     res.json({
       success: true,
@@ -331,7 +418,6 @@ exports.getUserRoadmaps = async (req, res) => {
     });
   }
 };
-
 
 // ================== DELETE ROADMAP ==================
 exports.deleteRoadmap = async (req, res) => {

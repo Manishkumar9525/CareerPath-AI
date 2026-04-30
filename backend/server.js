@@ -3,26 +3,38 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const fileUpload = require("express-fileupload");
 
 const connectDB = require("./config/db");
+const { cloudinaryConnect } = require("./config/cloudinary"); 
+
 const authRoutes = require("./routes/authRoutes");
 const roadmapRoutes = require("./routes/roadmapRoutes");
-const testRoutes = require("./routes/testRoutes"); 
+const testRoutes = require("./routes/testRoutes");
 const youtubeRoutes = require("./routes/youtubeRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 
-
 // Initialize Express app
 const app = express();
 
-// Connect to MongoDB
+// 🔥 CONNECT SERVICES
 connectDB();
+cloudinaryConnect(); // 🔥 IMPORTANT
 
 // Middleware
 app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+
+// 🔥 FILE UPLOAD (VERY IMPORTANT)
+app.use(
+  fileUpload({
+    useTempFiles: true,     // required for tempFilePath
+    tempFileDir: "/tmp/",   // folder for temp storage
+    limits: { fileSize: 5 * 1024 * 1024 }, // optional (5MB limit)
+  })
+);
 
 // Basic Test Route
 app.get("/api/test", (req, res) => {
@@ -44,7 +56,7 @@ app.get("/api/health", (req, res) => {
 // Routes
 app.use("/api/auth", authRoutes);
 app.use("/api/roadmap", roadmapRoutes);
-app.use("/api", testRoutes); 
+app.use("/api", testRoutes);
 app.use("/api", youtubeRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/chat", chatRoutes);

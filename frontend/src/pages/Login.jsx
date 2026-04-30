@@ -2,29 +2,49 @@ import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { FaLock, FaRegEnvelope } from "react-icons/fa6";
 import ThemeToggle from "../components/common/ThemeToggle";
+import { useAuth } from "../context/AuthContext";
+import { loginUser } from "../services/authService"; 
+import { toast } from "react-toastify";
 
 export default function Login() {
   const navigate = useNavigate();
+  const { login } = useAuth();
+
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!email.trim() || !password.trim()) {
-      return;
-    }
+    if (!email.trim() || !password.trim()) return;
 
-    setLoading(true);
-    setTimeout(() => {
+    try {
+      setLoading(true);
+
+      // ✅ call backend
+      const data = await loginUser({ email, password });
+
+      // 🔥 FIXED (central auth handling)
+      login(data);
+
+      toast.success("Login successful");
+
+      // ✅ redirect
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 400);
+
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "Login failed");
+    } finally {
       setLoading(false);
-      navigate("/");
-    }, 800);
+    }
   };
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
+    <div className="min-h-screen bg-background text-foreground ">
       <header className="border-b border-border bg-background/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-7xl items-center justify-between px-6">
           <Link to="/" className="flex items-center gap-3">

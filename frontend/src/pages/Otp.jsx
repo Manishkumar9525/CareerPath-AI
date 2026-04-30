@@ -2,26 +2,50 @@ import { useState } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { FaShieldHalved } from "react-icons/fa6";
 import ThemeToggle from "../components/common/ThemeToggle";
+import { verifyOtp, resendOtp } from "../services/authService"; 
+import { toast } from "react-toastify";
 
 export default function Otp() {
   const navigate = useNavigate();
   const location = useLocation();
   const email = location.state?.email || "your email";
+
   const [otp, setOtp] = useState("");
   const [loading, setLoading] = useState(false);
 
-  const handleSubmit = (event) => {
+  // ✅ VERIFY OTP
+  const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!otp.trim()) {
-      return;
-    }
+    if (!otp.trim()) return;
 
-    setLoading(true);
-    setTimeout(() => {
+    try {
+      setLoading(true);
+
+      await verifyOtp({
+        email,
+        otp,
+      });
+
+     toast.success("OTP verified successfully ");
+      navigate("/login");
+
+    } catch (error) {
+      console.error(error);
+      toast.error(error.response?.data?.message || "OTP verification failed");
+    } finally {
       setLoading(false);
-      navigate("/", { replace: true });
-    }, 800);
+    }
+  };
+
+  // ✅ RESEND OTP
+  const handleResend = async () => {
+    try {
+      await resendOtp(email);
+      toast.success("OTP resent successfully");
+    } catch (error) {
+      toast.error("Failed to resend OTP");
+    }
   };
 
   return (
@@ -71,9 +95,14 @@ export default function Otp() {
               </button>
 
               <div className="flex items-center justify-between text-sm text-muted-foreground">
-                <button type="button" className="font-medium text-foreground">
+                <button
+                  type="button"
+                  onClick={handleResend} // ✅ connected
+                  className="font-medium text-foreground"
+                >
                   Resend code
                 </button>
+
                 <Link to="/signup" className="font-medium text-foreground">
                   Change email
                 </Link>

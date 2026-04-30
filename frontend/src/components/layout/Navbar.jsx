@@ -8,7 +8,6 @@ export default function Navbar() {
   const nav = [
     { path: "/", label: "Home" },
     { path: "/about", label: "About" },
-    { path: "/courses", label: "Courses" },
     { path: "features", label: "Features", isScroll: true }, // 🔥 special
     { path: "/contact", label: "Contact" },
   ];

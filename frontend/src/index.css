@@ -65,13 +65,32 @@
   @apply text-green-500 dark:text-white/60;
 }
 
+/* BORDER */
 .border-main {
   @apply border-green-500/20 dark:border-white/10;
 }
 
+/* GLASS */
 .bg-glass {
   @apply bg-green-500/[0.04] dark:bg-white/[0.04];
 }
+
+/* INPUT BG */
+.bg-input {
+  @apply bg-white/60 dark:bg-white/[0.03];
+}
+
+/* BUTTON MAIN */
+.bg-main {
+  @apply bg-green-600 dark:bg-white;
+}
+
+/* BUTTON TEXT */
+.text-on-main {
+  @apply text-white dark:text-black;
+}
+
+
 /* LIGHT — soft peach with deep green accent */
 :root {
   --radius: 0.875rem;

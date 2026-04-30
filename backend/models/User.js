@@ -43,10 +43,35 @@ const userSchema = new mongoose.Schema(
     otpExpiry: {
       type: Date,
     },
+    avatar: {
+      type: String, // cloudinary URL
+      default: "",
+    },
+
+    avatarPublicId: {
+      type: String, // cloudinary delete ke liye
+      default: "",
+    },
+
+    bio: {
+      type: String,
+      default: "",
+      maxlength: 300,
+    },
+
+    location: {
+      type: String,
+      default: "",
+    },
+
+    career: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 // 🔐 Hash password
