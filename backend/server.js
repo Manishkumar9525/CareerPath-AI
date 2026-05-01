@@ -8,6 +8,8 @@ validateEnv();
 const express = require("express");
 const cors = require("cors");
 const fileUpload = require("express-fileupload");
+const path = require("path");
+const mongoose = require("mongoose");
 
 const connectDB = require("./config/db");
 const { cloudinaryConnect } = require("./config/cloudinary");
@@ -24,33 +26,48 @@ const app = express();
 
 // 🔥 CONNECT SERVICES
 connectDB();
-cloudinaryConnect(); // 🔥 IMPORTANT
+cloudinaryConnect();
 
-// Middleware
-app.use(cors({
-  origin: (origin, callback) => {
-    const clientUrl = process.env.CLIENT_URL || "http://localhost:3000";
-    const allowedOrigins = clientUrl.split(",").map(url => url.trim());
+// ===============================
+// ✅ CORS FIX (IMPORTANT)
+// ===============================
+const allowedOrigins = [
+  "https://career-path-ai-seven.vercel.app",
+  "http://localhost:5173",
+];
 
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("CORS not allowed"));
-    }
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-}));
+app.use(
+  cors({
+    origin: (origin, callback) => {
+      // allow no-origin (Postman / mobile apps)
+      if (!origin || allowedOrigins.includes(origin)) {
+        callback(null, true);
+      } else {
+        callback(new Error("CORS not allowed"));
+      }
+    },
+    credentials: true,
+    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allowedHeaders: ["Content-Type", "Authorization"],
+  })
+);
 
+// 🔥 HANDLE PREFLIGHT
+app.options("*", cors());
+
+// ===============================
+// ✅ BODY PARSER
+// ===============================
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 
-// 🔥 FILE UPLOAD (VERY IMPORTANT)
-const path = require("path");
-const tempDir = process.env.NODE_ENV === "production"
-  ? "/tmp/"
-  : path.join(__dirname, "temp");
+// ===============================
+// ✅ FILE UPLOAD
+// ===============================
+const tempDir =
+  process.env.NODE_ENV === "production"
+    ? "/tmp/"
+    : path.join(__dirname, "temp");
 
 app.use(
   fileUpload({
@@ -62,7 +79,9 @@ app.use(
   })
 );
 
-// Basic Test Route
+// ===============================
+// ✅ TEST ROUTE
+// ===============================
 app.get("/api/test", (req, res) => {
   res.json({
     success: true,
@@ -71,8 +90,9 @@ app.get("/api/test", (req, res) => {
   });
 });
 
-// Health check route
-const mongoose = require("mongoose");
+// ===============================
+// ✅ HEALTH CHECK
+// ===============================
 app.get("/api/health", (req, res) => {
   const isDbConnected = mongoose.connection.readyState === 1;
 
@@ -92,7 +112,9 @@ app.get("/api/health", (req, res) => {
   });
 });
 
-// Routes
+// ===============================
+// ✅ ROUTES
+// ===============================
 app.use("/api/auth", authRoutes);
 app.use("/api/roadmap", roadmapRoutes);
 app.use("/api", testRoutes);
@@ -100,7 +122,9 @@ app.use("/api", youtubeRoutes);
 app.use("/api/profile", profileRoutes);
 app.use("/api/chat", chatRoutes);
 
-// 404 handler
+// ===============================
+// ❌ 404 HANDLER
+// ===============================
 app.use((req, res) => {
   res.status(404).json({
     success: false,
@@ -108,7 +132,9 @@ app.use((req, res) => {
   });
 });
 
-// Global Error Handler
+// ===============================
+// ❌ GLOBAL ERROR HANDLER
+// ===============================
 app.use((err, req, res, next) => {
   console.error("Error:", err.stack);
 
@@ -122,7 +148,9 @@ app.use((err, req, res, next) => {
   });
 });
 
-// Start server
+// ===============================
+// 🚀 START SERVER
+// ===============================
 const PORT = process.env.PORT || 5000;
 
 app.listen(PORT, () => {
