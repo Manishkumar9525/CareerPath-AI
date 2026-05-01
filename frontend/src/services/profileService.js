@@ -1,22 +1,37 @@
-import axios from "axios";
+import api from "./api";
 
-const API = axios.create({
-  baseURL: `${import.meta.env.VITE_API_URL}/api`,
-});
+export const getProfile = async () => {
+  try {
+    return await api.get("/profile");
+  } catch (error) {
+    console.error("Get profile error:", error.message);
+    throw error;
+  }
+};
 
-API.interceptors.request.use((req) => {
-  const token = localStorage.getItem("token");
-  if (token) req.headers.Authorization = `Bearer ${token}`;
-  return req;
-});
+export const updateProfile = async (data) => {
+  try {
+    return await api.put("/profile/update", data);
+  } catch (error) {
+    console.error("Update profile error:", error.message);
+    throw error;
+  }
+};
 
-export const getProfile = () => API.get("/profile");
+export const uploadProfileImage = async (data) => {
+  try {
+    return await api.post("/profile/upload-image", data);
+  } catch (error) {
+    console.error("Upload profile image error:", error.message);
+    throw error;
+  }
+};
 
-export const updateProfile = (data) =>
-  API.put("/profile/update", data);
-
-export const uploadProfileImage = (data) =>
-  API.post("/profile/upload-image", data);
-
-export const deleteProfileImage = () =>
-  API.delete("/profile/delete-image");
+export const deleteProfileImage = async () => {
+  try {
+    return await api.delete("/profile/delete-image");
+  } catch (error) {
+    console.error("Delete profile image error:", error.message);
+    throw error;
+  }
+};

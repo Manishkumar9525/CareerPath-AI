@@ -8,17 +8,21 @@ const RoadmapPage = ({ roadmap, setRoadmap }) => {
 
   const toggleTask = async (mIndex, wIndex, tIndex) => {
     try {
-      await toggleTaskAPI(roadmap._id, {
+      const toggleRes = await toggleTaskAPI(roadmap._id, {
         monthIndex: mIndex,
         weekIndex: wIndex,
         taskIndex: tIndex,
       });
 
-      const res = await getRoadmapById(roadmap._id);
-      setRoadmap(res.data.roadmap);
+      if (!toggleRes.data?.roadmap) {
+        throw new Error("Failed to update roadmap");
+      }
+
+      const roadmapRes = await getRoadmapById(roadmap._id);
+      setRoadmap(roadmapRes.data?.roadmap || roadmap);
 
     } catch (err) {
-      console.error(err);
+      console.error("Roadmap toggle error:", err.message);
     }
   };
 
@@ -31,7 +35,7 @@ const RoadmapPage = ({ roadmap, setRoadmap }) => {
       <div className="space-y-5">
         <p className="text-sub text-sm">Your roadmap</p>
 
-        <h1 className="text-3xl md:text-4xl font-display text-main break-words">
+        <h1 className="text-3xl md:text-4xl font-display text-main wrap-break-word">
           {roadmap.goal}
         </h1>
 

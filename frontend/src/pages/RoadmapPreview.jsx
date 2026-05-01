@@ -15,10 +15,15 @@ const RoadmapPreview = () => {
   useEffect(() => {
     const fetchRoadmap = async () => {
       try {
+        if (!id) {
+          setRoadmap(null);
+          return;
+        }
+
         const res = await getRoadmapById(id);
-        setRoadmap(res.data.roadmap);
+        setRoadmap(res.data?.roadmap || null);
       } catch (err) {
-        console.error(err);
+        console.error("Roadmap preview load error:", err.message);
       }
     };
 

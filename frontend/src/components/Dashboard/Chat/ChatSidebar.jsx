@@ -1,4 +1,3 @@
-import { useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { getSingleChat, deleteChat } from "../../../services/chatService";
 import { toast } from "react-toastify";
@@ -12,7 +11,6 @@ const ChatSidebar = ({
   setHistory,
   onSelectChat,
 }) => {
-  const navigate = useNavigate();
   const [query, setQuery] = useState("");
 
   // ✅ search filter safe
@@ -25,18 +23,17 @@ const ChatSidebar = ({
     try {
       const data = await getSingleChat(chat._id);
 
-      // ✅ FIX: direct object (no .chat)
-      if (!data) {
+      if (!data?.messages) {
         toast.error("Chat not found");
         return;
       }
 
-      setMessages(data.messages || []);
+      setMessages(Array.isArray(data.messages) ? data.messages : []);
       setChatId(chat._id);
       onSelectChat?.();
 
     } catch (error) {
-      console.error(error);
+      console.error("Failed to load chat:", error.message);
       toast.error("Failed to load chat");
     }
   };

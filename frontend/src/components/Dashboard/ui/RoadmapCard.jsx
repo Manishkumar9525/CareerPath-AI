@@ -19,7 +19,7 @@ const RoadmapCard = ({ id, title, steps, duration, progress }) => {
 
       <div className="flex items-start justify-between gap-4">
         <div className="min-w-0">
-          <h3 className="font-semibold break-words">{title}</h3>
+          <h3 className="font-semibold wrap-break-word">{title}</h3>
           <p className="text-sub text-sm">
             {steps} steps • {duration}
           </p>

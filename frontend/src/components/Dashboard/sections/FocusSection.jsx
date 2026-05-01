@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { getRoadmapById } from "../../../services/roadmapService";
 
-const FocusSection = () => {
+const FocusSection = ({ roadmaps = [] }) => {
   const [tasks, setTasks] = useState([]);
   const [title, setTitle] = useState("No roadmap");
   const [weekLabel, setWeekLabel] = useState("");
@@ -13,8 +13,10 @@ const FocusSection = () => {
       try {
         if (!roadmapId) return;
 
-        const res = await getRoadmapById(roadmapId);
-        const roadmap = res.data.roadmap;
+        const cachedRoadmap = roadmaps.find((roadmap) => roadmap._id === roadmapId);
+        const roadmap = cachedRoadmap || (await getRoadmapById(roadmapId)).data.roadmap;
+
+        if (!roadmap) return;
 
         // 🔥 find first incomplete week
         let foundWeek = null;
@@ -44,12 +46,12 @@ const FocusSection = () => {
         }
 
       } catch (err) {
-        console.error(err);
+        console.error("Focus section error:", err.message);
       }
     };
 
     fetchFocus();
-  }, []);
+  }, [roadmaps]);
 
   return (
     <div className="p-6 rounded-2xl bg-glass border border-main shadow-card">

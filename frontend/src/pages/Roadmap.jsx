@@ -28,9 +28,9 @@ const Roadmap = () => {
         }
 
         const res = await getRoadmapById(roadmapId);
-        setRoadmap(res.data.roadmap);
+        setRoadmap(res.data?.roadmap || null);
       } catch (err) {
-        console.error(err);
+        console.error("Roadmap load error:", err.message);
       } finally {
         setLoading(false);
       }

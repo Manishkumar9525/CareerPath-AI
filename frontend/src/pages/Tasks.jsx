@@ -85,7 +85,7 @@ const Tasks = () => {
       setTasks(extractCurrentWeekTasks(selectedRoadmap));
 
     } catch (err) {
-      console.error(err);
+      console.error("Fetch tasks error:", err.message);
     }
   };
 
@@ -102,14 +102,18 @@ const Tasks = () => {
         taskIndex: task.taskIndex,
       });
 
-      if (res.data?.roadmap && task.roadmapId === activeRoadmapId) {
+      if (!res.data?.roadmap) {
+        throw new Error("Failed to toggle task");
+      }
+
+      if (task.roadmapId === activeRoadmapId) {
         setTasks(extractCurrentWeekTasks(res.data.roadmap));
       } else {
         fetchTasks();
       }
 
     } catch (err) {
-      console.error(err);
+      console.error("Toggle task error:", err.message);
     }
   };
 
@@ -156,7 +160,7 @@ const Tasks = () => {
 
                   {/* CONTENT */}
                   <div className="min-w-0">
-                    <p className="text-main font-medium break-words">
+                    <p className="text-main font-medium wrap-break-word">
                       {task.title}
                     </p>
 
@@ -192,7 +196,7 @@ const Tasks = () => {
 
                   {/* CONTENT */}
                   <div className="min-w-0">
-                    <p className="text-main line-through break-words">
+                    <p className="text-main line-through wrap-break-word">
                       {task.title}
                     </p>
 

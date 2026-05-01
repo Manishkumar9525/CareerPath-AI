@@ -44,6 +44,10 @@ const ChatWindow = ({
     try {
       const data = await sendMessage(text, chatId);
 
+      if (!data?.reply) {
+        throw new Error("Invalid AI response");
+      }
+
       // ✅ NEW CHAT → set chatId + add history only once
       if (!chatId && data.chatId) {
         setChatId(data.chatId);
@@ -92,7 +96,7 @@ const ChatWindow = ({
       }, 15);
 
     } catch (error) {
-      console.error(error);
+      console.error("AI response error:", error.message);
       toast.error("AI failed to respond");
     }
   };

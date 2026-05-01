@@ -3,7 +3,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { FaLock, FaRegEnvelope } from "react-icons/fa6";
 import ThemeToggle from "../components/common/ThemeToggle";
 import { useAuth } from "../context/AuthContext";
-import { loginUser } from "../services/authService"; 
+import { loginUser } from "../services/authService";
 import { toast } from "react-toastify";
 
 export default function Login() {
@@ -17,13 +17,20 @@ export default function Login() {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
-    if (!email.trim() || !password.trim()) return;
+    if (!email.trim() || !password.trim()) {
+      toast.error("Email and password are required");
+      return;
+    }
 
     try {
       setLoading(true);
 
       // ✅ call backend
       const data = await loginUser({ email, password });
+
+      if (!data?.token) {
+        throw new Error("Invalid login response");
+      }
 
       // 🔥 FIXED (central auth handling)
       login(data);
@@ -36,8 +43,8 @@ export default function Login() {
       }, 400);
 
     } catch (error) {
-      console.error(error);
-      toast.error(error.response?.data?.message || "Login failed");
+      console.error("Login error:", error.message);
+      toast.error(error.response?.data?.message || error.message || "Login failed");
     } finally {
       setLoading(false);
     }
@@ -92,7 +99,7 @@ export default function Login() {
 
               <div className="flex items-center justify-between text-sm text-muted-foreground">
                 <label className="flex items-center gap-2">
-                  <input type="checkbox" className="accent-[color:var(--color-primary)]" />
+                  <input type="checkbox" className="accent-(--color-primary)" />
                   Remember me
                 </label>
                 <button type="button" className="font-medium text-foreground">

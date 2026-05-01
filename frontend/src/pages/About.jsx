@@ -12,7 +12,7 @@ export default function About() {
       <section className="relative py-28 px-6 text-center overflow-hidden">
 
         <div className="absolute inset-0 grid-bg opacity-90 pointer-events-none"></div>
-        <div className="absolute inset-0 bg-gradient-to-b from-transparent via-green-500/[0.05] dark:via-white/[0.03] to-transparent"></div>
+        <div className="absolute inset-0 bg-linear-to-b from-transparent via-green-500/5 dark:via-white/3 to-transparent"></div>
 
         <div className="relative z-10 max-w-4xl mx-auto">
 
@@ -100,7 +100,7 @@ export default function About() {
 
       {/* ================= DIVIDER ================= */}
       <div className="max-w-5xl mx-auto px-6">
-        <div className="h-px bg-gradient-to-r from-transparent via-border to-transparent opacity-70"></div>
+        <div className="h-px bg-linear-to-r from-transparent via-border to-transparent opacity-70"></div>
       </div>
 
       {/* ================= TIMELINE (FIXED) ================= */}

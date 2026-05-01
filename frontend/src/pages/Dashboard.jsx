@@ -12,14 +12,17 @@ import { getUserRoadmaps } from "../services/roadmapService";
 
 const Dashboard = () => {
   const [roadmaps, setRoadmaps] = useState([]);
+  const [error, setError] = useState(null);
 
   useEffect(() => {
     const fetchRoadmaps = async () => {
       try {
+        setError(null);
         const res = await getUserRoadmaps();
         setRoadmaps(res.data.roadmaps || []);
       } catch (err) {
-        console.error(err);
+        console.error("Dashboard roadmaps error:", err.message);
+        setError("Failed to load roadmaps");
       }
     };
 
@@ -28,6 +31,12 @@ const Dashboard = () => {
 
   return (
     <DashboardLayout>
+      {error && (
+        <div className="mb-6 rounded-2xl border border-main bg-glass px-4 py-3 text-sm text-sub">
+          {error}
+        </div>
+      )}
+
       <WelcomeHeader />
 
       {/* ✅ dynamic stats */}

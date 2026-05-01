@@ -132,7 +132,7 @@ const Profile = () => {
                   className="w-full text-2xl md:text-3xl bg-transparent border-b border-main outline-none"
                 />
               ) : (
-                <h1 className="text-2xl md:text-3xl font-display text-main break-words">
+                <h1 className="text-2xl md:text-3xl font-display text-main wrap-break-word">
                   {user.name}
                 </h1>
               )}

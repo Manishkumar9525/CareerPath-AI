@@ -28,7 +28,11 @@ const CreateRoadmap = () => {
         duration,
       });
 
-      const roadmap = res.data.roadmap;
+      const roadmap = res.data?.roadmap;
+
+      if (!roadmap?._id) {
+        throw new Error("Invalid roadmap response");
+      }
 
       localStorage.setItem("currentRoadmapId", roadmap._id);
 
@@ -36,8 +40,8 @@ const CreateRoadmap = () => {
       navigate(`/roadmap-preview/${roadmap._id}`);
 
     } catch (err) {
-      console.error("Roadmap Error:", err);
-      alert("Something went wrong while generating roadmap");
+      console.error("Roadmap Error:", err.message);
+      alert(err.response?.data?.message || err.message || "Something went wrong while generating roadmap");
     } finally {
       setLoading(false);
     }
@@ -101,8 +105,8 @@ const CreateRoadmap = () => {
                   key={item}
                   onClick={() => setDuration(item)}
                   className={`px-4 py-2 rounded-full border transition-all duration-200 ${duration === item
-                      ? "bg-main text-on-main border-main shadow-soft"
-                      : "border-main text-sub hover:bg-glass hover:text-main"
+                    ? "bg-main text-on-main border-main shadow-soft"
+                    : "border-main text-sub hover:bg-glass hover:text-main"
                     }`}
                 >
                   {item}

@@ -13,11 +13,11 @@ const ChatLayout = () => {
   useEffect(() => {
     const loadChats = async () => {
       try {
-        const chats = await getChats(); // ✅ FIXED
-
-        setHistory(chats || []);
+        const chats = await getChats();
+        setHistory(Array.isArray(chats) ? chats : []);
       } catch (error) {
-        console.error("Failed to load chats", error);
+        console.error("Failed to load chats:", error.message);
+        setHistory([]);
       }
     };
 
