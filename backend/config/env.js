@@ -7,7 +7,6 @@ const requiredEnvVars = [
     "CLOUDINARY_API_SECRET",
     "GMAIL_USER",
     "GMAIL_PASSWORD",
-    "GEMINI_API_KEY",
     "GROQ_API_KEY",
     "YOUTUBE_API_KEY",
 ];
