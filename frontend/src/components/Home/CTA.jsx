@@ -1,6 +1,9 @@
 import { FiZap } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 export default function CTA() {
+  const navigate = useNavigate();
+
   return (
     <section className="relative py-28 px-6">
 
@@ -54,25 +57,31 @@ export default function CTA() {
         {/* BUTTONS */}
         <div className="relative z-10 mt-10 flex flex-col sm:flex-row justify-center gap-4">
 
-          {/* PRIMARY */}
-          <button className="
-           px-6 py-3 rounded-full font-medium transition
-          bg-green-600 text-white
-          dark:bg-white dark:text-black
-          hover:scale-105
-          ">
+          {/* ✅ START FREE → SIGNUP */}
+          <button
+            onClick={() => navigate("/signup")}
+            className="
+             px-6 py-3 rounded-full font-medium transition
+            bg-green-600 text-white
+            dark:bg-white dark:text-black
+            hover:scale-105
+            "
+          >
             Start free
           </button>
 
-          {/* SECONDARY */}
-          <button className="
-            border border-green-500/30 dark:border-white/20 
-            text-green-700 dark:text-white 
-            px-6 py-3 rounded-full
+          {/* ✅ TALK TO AI → LOGIN */}
+          <button
+            onClick={() => navigate("/login")}
+            className="
+              border border-green-500/30 dark:border-white/20 
+              text-green-700 dark:text-white 
+              px-6 py-3 rounded-full
 
-            hover:bg-green-500/10 dark:hover:bg-white/10
-            transition
-          ">
+              hover:bg-green-500/10 dark:hover:bg-white/10
+              transition
+            "
+          >
             Talk to AI mentor
           </button>
 

@@ -1,6 +1,9 @@
 import { FiCheck, FiCpu } from "react-icons/fi";
+import { useNavigate } from "react-router-dom";
 
 export default function Product() {
+  const navigate = useNavigate();
+
   return (
     <section className="relative py-28 px-6 border-y border-green-500/20 dark:border-white/10">
 
@@ -39,8 +42,11 @@ export default function Product() {
             ))}
           </div>
 
-          {/* BUTTON */}
-          <button className="mt-8 bg-green-600 text-white dark:bg-white dark:text-black px-6 py-3 rounded-full hover:scale-105 transition">
+          {/* ✅ BUTTON → LOGIN */}
+          <button
+            onClick={() => navigate("/login")}
+            className="mt-8 bg-green-600 text-white dark:bg-white dark:text-black px-6 py-3 rounded-full hover:scale-105 transition"
+          >
             Open dashboard
           </button>
         </div>
@@ -81,27 +87,23 @@ export default function Product() {
           {/* CHAT */}
           <div className="p-6 space-y-4 text-sm">
 
-            {/* USER */}
             <div className="flex justify-end">
               <div className="bg-green-600 text-white dark:bg-white dark:text-black px-4 py-2 rounded-full max-w-xs">
                 What should I learn after React basics?
               </div>
             </div>
 
-            {/* AI */}
             <div className="bg-green-500/[0.05] dark:bg-white/[0.04] border border-green-500/20 dark:border-white/10 px-4 py-3 rounded-xl text-green-700 dark:text-white/80 max-w-md">
               Nice progress! Next up: <b>state management</b> (TanStack Query),
               routing, and a small full-stack project. I added 3 tasks to Week 4 of your roadmap.
             </div>
 
-            {/* USER */}
             <div className="flex justify-end">
               <div className="bg-green-600 text-white dark:bg-white dark:text-black px-4 py-2 rounded-full">
                 Give me a project idea.
               </div>
             </div>
 
-            {/* AI */}
             <div className="bg-green-500/[0.05] dark:bg-white/[0.04] border border-green-500/20 dark:border-white/10 px-4 py-3 rounded-xl text-green-700 dark:text-white/80 max-w-md">
               A <b>personal finance dashboard</b> — auth, charts, CRUD.
               Stretch goal: monthly insights with AI.

@@ -1,4 +1,8 @@
+import { useNavigate } from "react-router-dom";
+
 export default function Hero() {
+  const navigate = useNavigate();
+
   return (
     <section className="relative text-center py-19 px-6 overflow-hidden">
 
@@ -36,22 +40,28 @@ export default function Hero() {
         {/* BUTTONS */}
         <div className="mt-8 flex justify-center gap-4">
 
-          {/* PRIMARY */}
-          <button className="px-6 py-3 rounded-full font-medium transition
+          {/* ✅ START FREE → SIGNUP */}
+          <button
+            onClick={() => navigate("/signup")}
+            className="px-6 py-3 rounded-full font-medium transition
              bg-green-600 text-white
             dark:bg-white dark:text-black
-            hover:scale-105 px-6 py-3 rounded-full shadow-md hover:scale-105 transition">
+            hover:scale-105 px-6 py-3 rounded-full shadow-md hover:scale-105 transition"
+          >
             Start free →
           </button>
 
-          {/* SECONDARY */}
-          <button className="
-            border border-green-500/20 dark:border-white/10
-            px-6 py-3 rounded-full text-muted-foreground
-            hover:text-green-700 dark:hover:text-white
-            hover:bg-green-500/10 dark:hover:bg-white/5
-            transition
-          ">
+          {/* ✅ SEE FEATURES → LOGIN */}
+          <button
+            onClick={() => navigate("/login")}
+            className="
+              border border-green-500/20 dark:border-white/10
+              px-6 py-3 rounded-full text-muted-foreground
+              hover:text-green-700 dark:hover:text-white
+              hover:bg-green-500/10 dark:hover:bg-white/5
+              transition
+            "
+          >
             See features
           </button>
 
