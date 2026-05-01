@@ -1,10 +1,10 @@
 const express = require("express");
 const router = express.Router();
 
-// controller import karo
 const { testGroq } = require("../controllers/testController");
+const { protect } = require("../middleware/authMiddleware");
 
-// route define
-router.get("/test-groq", testGroq);
+// Protected route - requires authentication
+router.get("/test-groq", protect, testGroq);
 
 module.exports = router;

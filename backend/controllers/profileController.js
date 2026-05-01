@@ -126,6 +126,9 @@ exports.updateProfile = async (req, res) => {
 // ===============================
 // 🖼️ UPLOAD PROFILE IMAGE
 // ===============================
+const ALLOWED_IMAGE_MIMES = ["image/jpeg", "image/png", "image/webp"];
+const MAX_IMAGE_SIZE = 5 * 1024 * 1024; // 5MB
+
 exports.uploadProfileImage = async (req, res) => {
   try {
     const userId = req.user.id;
@@ -138,6 +141,22 @@ exports.uploadProfileImage = async (req, res) => {
     }
 
     const file = req.files.image;
+
+    // ✅ VALIDATE MIME TYPE
+    if (!ALLOWED_IMAGE_MIMES.includes(file.mimetype)) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid file type. Allowed: ${ALLOWED_IMAGE_MIMES.join(", ")}`,
+      });
+    }
+
+    // ✅ VALIDATE FILE SIZE
+    if (file.size > MAX_IMAGE_SIZE) {
+      return res.status(400).json({
+        success: false,
+        message: `File too large. Max size: ${MAX_IMAGE_SIZE / 1024 / 1024}MB`,
+      });
+    }
 
     // 🔥 upload via util
     const result = await uploadImageToCloudinary(
@@ -163,7 +182,7 @@ exports.uploadProfileImage = async (req, res) => {
       userId,
       {
         avatar: result.secure_url,
-        avatarPublicId: result.public_id, // 🔥 FIX
+        avatarPublicId: result.public_id,
       },
       { new: true }
     ).select("name email avatar bio location career");
@@ -175,9 +194,10 @@ exports.uploadProfileImage = async (req, res) => {
       user,
     });
   } catch (error) {
+    console.error("Profile image upload error:", error.message);
     res.status(500).json({
       success: false,
-      message: error.message,
+      message: "Image upload failed",
     });
   }
 };

@@ -1,4 +1,5 @@
 const { cloudinary } = require("../config/cloudinary");
+const fs = require("fs").promises;
 
 exports.uploadImageToCloudinary = async (file, folder) => {
   try {
@@ -14,14 +15,25 @@ exports.uploadImageToCloudinary = async (file, folder) => {
       options
     );
 
-    return response;
+    // ✅ CLEANUP TEMP FILE
+    try {
+      await fs.unlink(file.tempFilePath);
+    } catch (cleanupError) {
+      console.warn("Could not delete temp file:", cleanupError.message);
+    }
 
+    return response;
   } catch (error) {
+    // ✅ Cleanup on error too
+    try {
+      await fs.unlink(file.tempFilePath);
+    } catch (e) {
+      // Ignore cleanup errors
+    }
     console.error("Cloudinary upload error:", error);
     throw error;
   }
 };
-
 
 // ✅ DELETE
 exports.deleteFromCloudinary = async (publicId) => {
@@ -29,7 +41,6 @@ exports.deleteFromCloudinary = async (publicId) => {
     if (!publicId) return;
 
     await cloudinary.uploader.destroy(publicId);
-
   } catch (error) {
     console.error("Delete error:", error);
     throw error;
