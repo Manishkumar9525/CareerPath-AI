@@ -4,8 +4,8 @@ import axios from "axios";
 // 🌐 AXIOS INSTANCE
 // ===============================
 const API = axios.create({
-  baseURL: "http://localhost:5000/api",
-  timeout: 10000, // 🔥 optional safety
+  baseURL: `${import.meta.env.VITE_API_URL}/api`,
+  timeout: 10000,
 });
 
 // ===============================
