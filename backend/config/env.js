@@ -1,7 +1,6 @@
 const requiredEnvVars = [
     "MONGODB_URL",
     "JWT_SECRET",
-    "CLIENT_URL",
     "CLOUDINARY_CLOUD_NAME",
     "CLOUDINARY_API_KEY",
     "CLOUDINARY_API_SECRET",

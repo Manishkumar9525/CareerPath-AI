@@ -31,8 +31,10 @@ cloudinaryConnect();
 // ===============================
 // ✅ CORS FIX (IMPORTANT)
 // ===============================
+// Build allowed origins from env when available so deployments control client URL
 const allowedOrigins = [
-  "https://career-path-ai-seven.vercel.app",
+  // prefer explicit CLIENT_URL if provided (e.g., set in Render/Vercel env)
+  process.env.CLIENT_URL || "https://career-path-ai-seven.vercel.app",
   "http://localhost:5173",
 ];
 

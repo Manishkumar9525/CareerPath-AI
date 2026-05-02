@@ -5,10 +5,11 @@ const BASE_URL =
   import.meta.env.VITE_API_URL ||
   "https://careerpath-ai-s2tb.onrender.com/api";
 
-// 🔥 ensure /api duplicate na ho
-const normalizedBaseURL = BASE_URL.endsWith("/api")
-  ? BASE_URL
-  : `${BASE_URL}/api`;
+// 🔧 normalize base URL: remove trailing slashes then ensure it ends with /api
+const cleanedBase = BASE_URL.replace(/\/+$/g, "");
+const normalizedBaseURL = cleanedBase.endsWith("/api")
+  ? cleanedBase
+  : `${cleanedBase}/api`;
 
 const api = axios.create({
   baseURL: normalizedBaseURL,
