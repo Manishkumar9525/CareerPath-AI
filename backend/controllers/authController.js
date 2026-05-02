@@ -9,7 +9,7 @@ const generateToken = (id) => {
   });
 };
 
-// ================== SIGNUP (SEND OTP) ==================
+// ================== SIGNUP ==================
 exports.signup = async (req, res) => {
   try {
     const { name, email, password, passwordConfirm } = req.body;
@@ -29,27 +29,32 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // 🔍 Check existing user
     let user = await User.findOne({ email });
 
-    // 🔢 Generate OTP
     const otp = Math.floor(100000 + Math.random() * 900000).toString();
 
-    // 🟡 Case 1: User exists but NOT verified
+    // ===============================
+    // 🟡 USER EXISTS (NOT VERIFIED)
+    // ===============================
     if (user && !user.isVerified) {
       user.otp = otp;
       user.otpExpiry = Date.now() + 5 * 60 * 1000;
       await user.save();
 
-      await mailSender(email, "CareerPath OTP", `Your OTP is ${otp}`);
-
-      return res.json({
+      res.json({
         success: true,
         message: "OTP resent. Please verify your email",
       });
+
+      mailSender(email, "CareerPath OTP", `Your OTP is ${otp}`)
+        .catch(err => console.error("Mail error:", err.message));
+
+      return; // 🔥 VERY IMPORTANT
     }
 
-    // 🔴 Case 2: User exists and verified
+    // ===============================
+    // 🔴 USER EXISTS (VERIFIED)
+    // ===============================
     if (user && user.isVerified) {
       return res.status(400).json({
         success: false,
@@ -57,22 +62,25 @@ exports.signup = async (req, res) => {
       });
     }
 
-    // 🟢 Case 3: New user (IMPORTANT: NO HASH HERE ❌)
+    // ===============================
+    // 🟢 NEW USER
+    // ===============================
     user = await User.create({
       name,
       email,
-      password, // ✅ raw password (model will hash)
+      password,
       otp,
       otpExpiry: Date.now() + 5 * 60 * 1000,
       isVerified: false,
     });
 
-    await mailSender(email, "CareerPath OTP", `Your OTP is ${otp}`);
-
     res.status(201).json({
       success: true,
       message: "OTP sent to email. Please verify",
     });
+
+    mailSender(email, "CareerPath OTP", `Your OTP is ${otp}`)
+      .catch(err => console.error("Mail error:", err.message));
 
   } catch (error) {
     console.error("Signup Error:", error.message);
@@ -222,12 +230,14 @@ exports.resendOTP = async (req, res) => {
     user.otpExpiry = Date.now() + 5 * 60 * 1000;
     await user.save();
 
-    await mailSender(email, "CareerPath OTP", `Your OTP is ${otp}`);
-
-    res.json({
+    res.status(201).json({
       success: true,
-      message: "OTP resent successfully",
+      message: "OTP sent to email. Please verify",
     });
+
+    // 🔥 send email AFTER response (non-blocking)
+    mailSender(email, "CareerPath OTP", `Your OTP is ${otp}`)
+      .catch(err => console.error("Mail error:", err.message));
 
   } catch (error) {
     console.error("Resend OTP Error:", error.message);

@@ -3,26 +3,23 @@ require("dotenv").config();
 
 const mailSender = async (email, subject, message) => {
   try {
-    // 🔥 Create transporter
     const transporter = nodemailer.createTransport({
-      service: "gmail", // simpler than host/port
+      service: "gmail",
       auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_PASSWORD,
       },
     });
 
-    // 🔍 Verify connection
-    await transporter.verify();
-    console.log("✅ SMTP connected");
+    // ❌ REMOVE THIS (VERY IMPORTANT)
+    // await transporter.verify();
 
-    // 📩 Send mail
+    console.log("📩 Sending mail to:", email);
+
     const info = await transporter.sendMail({
       from: `"CareerPath AI" <${process.env.GMAIL_USER}>`,
       to: email,
       subject: subject,
-
-      // Plain + HTML दोनों
       text: message,
       html: `
         <div style="font-family: Arial; text-align:center;">
@@ -32,14 +29,14 @@ const mailSender = async (email, subject, message) => {
       `,
     });
 
-    console.log("📨 Mail sent:", info.response);
-    console.log("📧 To:", email);
-
+    console.log("✅ Mail sent:", info.response);
     return info;
 
   } catch (error) {
     console.error("❌ MAIL ERROR:", error.message);
-    throw error;
+
+    // ❌ DON'T throw
+    return null;
   }
 };
 

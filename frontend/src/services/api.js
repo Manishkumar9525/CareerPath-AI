@@ -1,11 +1,9 @@
 import axios from "axios";
 
-// ✅ BASE URL FIX (fallback + normalization)
 const BASE_URL =
   import.meta.env.VITE_API_URL ||
   "https://careerpath-ai-s2tb.onrender.com/api";
 
-// 🔧 normalize base URL: remove trailing slashes then ensure it ends with /api
 const cleanedBase = BASE_URL.replace(/\/+$/g, "");
 const normalizedBaseURL = cleanedBase.endsWith("/api")
   ? cleanedBase
@@ -13,12 +11,10 @@ const normalizedBaseURL = cleanedBase.endsWith("/api")
 
 const api = axios.create({
   baseURL: normalizedBaseURL,
-  timeout: 10000,
+  timeout: 20000, // 🔥 increased
 });
 
-// ===============================
-// 🔐 REQUEST INTERCEPTOR
-// ===============================
+// REQUEST
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem("token");
@@ -32,25 +28,18 @@ api.interceptors.request.use(
   (error) => Promise.reject(error)
 );
 
-// ===============================
-// ⚠️ RESPONSE INTERCEPTOR
-// ===============================
+// RESPONSE
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    // 🔥 Token expired / unauthorized
     if (error.response?.status === 401) {
-      localStorage.removeItem("token");
-      localStorage.removeItem("user");
-      localStorage.removeItem("currentRoadmapId");
-
-      // optional: redirect (future)
-      // window.location.href = "/login";
+      localStorage.clear();
+      // window.location.href = "/login"; // optional
     }
 
-    // 🌐 Network issue
     if (!error.response) {
-      error.message = "Network error: unable to reach the backend.";
+      console.error("Network Error Details:", error);
+      error.message = "Server not responding or network issue.";
     }
 
     return Promise.reject(error);

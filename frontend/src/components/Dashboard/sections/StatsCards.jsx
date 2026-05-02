@@ -28,7 +28,7 @@ const StatsCards = ({ roadmaps = [] }) => {
       {/* 🔥 keep as it is (static for now) */}
       <StatCard
         title="Day streak"
-        value="12"
+        value="0"
         extra="Keep it up 🔥"
       />
 
