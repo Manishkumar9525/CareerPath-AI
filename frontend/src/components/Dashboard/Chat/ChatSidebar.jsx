@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom"; // ✅ FIX
 import { getSingleChat, deleteChat } from "../../../services/chatService";
 import { toast } from "react-toastify";
 import { FaTrash } from "react-icons/fa";
@@ -12,6 +13,7 @@ const ChatSidebar = ({
   onSelectChat,
 }) => {
   const [query, setQuery] = useState("");
+  const navigate = useNavigate(); // ✅ FIX
 
   // ✅ search filter safe
   const filteredHistory = history.filter((chat) =>
