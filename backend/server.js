@@ -31,41 +31,12 @@ cloudinaryConnect();
 // ===============================
 // ✅ CORS FIX (IMPORTANT)
 // ===============================
-const allowedOrigins = [
-  "https://career-path-ai-seven.vercel.app",
-  /^https:\/\/.*\.vercel\.app$/i,
-  /^http:\/\/localhost(?::\d+)?$/i,
-  /^http:\/\/127\.0\.0\.1(?::\d+)?$/i,
-];
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 
-const corsOptions = {
-  origin: (origin, callback) => {
-    // Allow same-origin / server-to-server requests with no Origin header
-    if (!origin) {
-      return callback(null, true);
-    }
-
-    const isAllowed = allowedOrigins.some((allowedOrigin) => {
-      if (allowedOrigin instanceof RegExp) {
-        return allowedOrigin.test(origin);
-      }
-
-      return allowedOrigin === origin;
-    });
-
-    if (isAllowed) {
-      return callback(null, true);
-    }
-
-    return callback(new Error("CORS not allowed"));
-  },
-  credentials: true,
-  methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-  allowedHeaders: ["Content-Type", "Authorization"],
-};
-
-app.use(cors(corsOptions));
-app.options("*", cors(corsOptions));
+app.options("*", cors());
 
 // ===============================
 // ✅ BODY PARSER
