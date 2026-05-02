@@ -1,10 +1,12 @@
 const express = require('express');
 
-const { 
-  signup, 
-  login, 
-  verifyOTP, 
-  resendOTP 
+console.log("authRoutes loaded");
+
+const {
+  signup,
+  login,
+  verifyOTP,
+  resendOTP
 } = require('../controllers/authController');
 
 const { protect } = require('../middleware/authMiddleware');
@@ -12,6 +14,7 @@ const { protect } = require('../middleware/authMiddleware');
 const router = express.Router();
 
 // Public routes
+router.get("/debug", (req, res) => res.send("auth route working"));
 router.post("/signup", signup);
 router.post("/verify-otp", verifyOTP);
 router.post("/login", login);
