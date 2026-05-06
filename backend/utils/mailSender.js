@@ -1,19 +1,20 @@
 const nodemailer = require("nodemailer");
 require("dotenv").config();
 
+// ✅ Create transporter
+const transporter = nodemailer.createTransport({
+  host: "smtp.gmail.com",
+  port: 465,
+  secure: true,
+  auth: {
+    user: process.env.GMAIL_USER,
+    pass: process.env.GMAIL_PASSWORD,
+  },
+});
+
+// ✅ Send Mail Function
 const mailSender = async (email, subject, message) => {
   try {
-    const transporter = nodemailer.createTransport({
-      service: "gmail",
-      auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASSWORD,
-      },
-    });
-
-    // ❌ REMOVE THIS (VERY IMPORTANT)
-    // await transporter.verify();
-
     console.log("📩 Sending mail to:", email);
 
     const info = await transporter.sendMail({
@@ -22,9 +23,9 @@ const mailSender = async (email, subject, message) => {
       subject: subject,
       text: message,
       html: `
-        <div style="font-family: Arial; text-align:center;">
+        <div style="font-family: Arial, sans-serif; text-align:center; padding:20px;">
           <h2 style="color:#4f46e5;">CareerPath AI</h2>
-          <p>${message}</p>
+          <p style="font-size:16px;">${message}</p>
         </div>
       `,
     });
@@ -33,9 +34,8 @@ const mailSender = async (email, subject, message) => {
     return info;
 
   } catch (error) {
-    console.error("❌ MAIL ERROR:", error.message);
+    console.error("❌ MAIL ERROR:", error);
 
-    // ❌ DON'T throw
     return null;
   }
 };

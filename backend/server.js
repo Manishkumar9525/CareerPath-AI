@@ -15,7 +15,6 @@ const connectDB = require("./config/db");
 const { cloudinaryConnect } = require("./config/cloudinary");
 
 const authRoutes = require("./routes/authRoutes");
-console.log("AuthRoutes import:", authRoutes);
 const roadmapRoutes = require("./routes/roadmapRoutes");
 const testRoutes = require("./routes/testRoutes");
 const youtubeRoutes = require("./routes/youtubeRoutes");
