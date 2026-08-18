@@ -21,20 +21,26 @@ const youtubeRoutes = require("./routes/youtubeRoutes");
 const profileRoutes = require("./routes/profileRoutes");
 const chatRoutes = require("./routes/chatRoutes");
 
-// Initialize Express app
+// ===============================
+// 🚀 INITIALIZE EXPRESS APP
+// ===============================
 const app = express();
 
+// ===============================
 // 🔥 CONNECT SERVICES
+// ===============================
 connectDB();
 cloudinaryConnect();
 
 // ===============================
-// ✅ CORS FIX (IMPORTANT)
+// ✅ CORS
 // ===============================
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 
 app.options("*", cors());
 
@@ -43,6 +49,14 @@ app.options("*", cors());
 // ===============================
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
+
+// ===============================
+// 🔍 REQUEST DEBUG
+// ===============================
+app.use((req, res, next) => {
+  console.log("Incoming request:", req.method, req.originalUrl);
+  next();
+});
 
 // ===============================
 // ✅ FILE UPLOAD

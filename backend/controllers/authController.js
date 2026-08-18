@@ -1,6 +1,13 @@
 const User = require("../models/User");
+const Chat = require("../models/Chat");
+const Roadmap = require("../models/Roadmap");
+
 const jwt = require("jsonwebtoken");
 const mailSender = require("../utils/mailSender");
+
+const {
+  deleteFromCloudinary,
+} = require("../utils/cloudinary");
 
 // 🔐 Generate JWT
 const generateToken = (id) => {
@@ -245,6 +252,80 @@ exports.resendOTP = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to resend OTP",
+    });
+  }
+};
+
+
+
+// ================== DELETE ACCOUNT ==================
+exports.deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    // ==================================================
+    // 🔍 FIND USER
+    // ==================================================
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+
+    // ==================================================
+    // 🖼️ DELETE PROFILE IMAGE FROM CLOUDINARY
+    // ==================================================
+    if (user.avatarPublicId) {
+      try {
+        await deleteFromCloudinary(user.avatarPublicId);
+      } catch (cloudinaryError) {
+        console.error(
+          "Cloudinary image delete error:",
+          cloudinaryError.message
+        );
+      }
+    }
+
+    // ==================================================
+    // 💬 DELETE ALL USER CHATS
+    // ==================================================
+    await Chat.deleteMany({
+      user: userId,
+    });
+
+    // ==================================================
+    // 🗺️ DELETE ALL USER ROADMAPS
+    // ==================================================
+    await Roadmap.deleteMany({
+      userId: userId,
+    });
+
+    // ==================================================
+    // 🗑️ DELETE USER ACCOUNT
+    // ==================================================
+    await User.findByIdAndDelete(userId);
+
+    // ==================================================
+    // ✅ SUCCESS
+    // ==================================================
+    return res.status(200).json({
+      success: true,
+      message:
+        "Account and all associated data deleted successfully",
+    });
+
+  } catch (error) {
+    console.error(
+      "DELETE ACCOUNT ERROR:",
+      error.message
+    );
+
+    return res.status(500).json({
+      success: false,
+      message: "Failed to delete account",
     });
   }
 };
